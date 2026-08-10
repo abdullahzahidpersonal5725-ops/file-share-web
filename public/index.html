@@ -615,14 +615,26 @@
     async function loadFiles() {
       try {
         const res = await apiFetch('/api/files');
-        if (!res) return;
-        const data = await res.json();
-        if (data.success) {
-          allFiles = data.files;
-          if (!showingTrash) renderFiles(allFiles);
+        if (res) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.files)) {
+            allFiles = data.files;
+            localStorage.setItem('local_user_files', JSON.stringify(allFiles));
+            renderFiles(allFiles);
+            return;
+          }
         }
-      } catch (err) {
-        console.error('Failed to load files:', err);
+      } catch (err) {}
+
+      const cachedFiles = localStorage.getItem('local_user_files');
+      if (cachedFiles) {
+        try {
+          allFiles = JSON.parse(cachedFiles);
+          renderFiles(allFiles);
+        } catch(e) { allFiles = []; renderFiles([]); }
+      } else {
+        allFiles = [];
+        renderFiles([]);
       }
       loadTrashCount();
       loadStats();
