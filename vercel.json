@@ -8,7 +8,26 @@
       "src": "/auth/(.*)",
       "dest": "/server.js"
     },
-
+    {
+      "src": "/app",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/files",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/setup-2fa",
+      "dest": "/setup-2fa.html"
+    },
+    {
+      "src": "/forgot-password",
+      "dest": "/forgot-password.html"
+    },
+    {
+      "src": "/share",
+      "dest": "/share.html"
+    },
     {
       "src": "/login",
       "dest": "/login.html"
