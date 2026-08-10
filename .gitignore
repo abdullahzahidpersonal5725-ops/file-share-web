@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+uploads/*
+!uploads/.gitkeep
+google-oauth.json
+smtp-config.json
+
+

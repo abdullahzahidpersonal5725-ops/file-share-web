@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abdullah Drive - File Share Workspace</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0a0a0f;
+      --surface:#12121a;
+      --surface-hover:#1a1a28;
+      --surface2:#1a1a28;
+      --border:#2a2a3a;
+      --primary:#6c5ce7;
+      --primary-glow:rgba(108,92,231,0.3);
+      --primary-light:#a29bfe;
+      --danger:#ff6b6b;
+      --success:#00cec9;
+      --warning:#fdcb6e;
+      --text:#e2e2f0;
+      --text-dim:#8888a0;
+      --text-bright:#ffffff;
+      --neon-cyan:#00f2fe;
+      --neon-lime:#00ff87;
+      --neon-magenta:#ff007f;
+      --accent-cyan:#00f2fe;
+      --accent-pink:#ff007f;
+      --shadow-neon:0 0 20px rgba(108,92,231,0.5);
+      --radius:12px;
+      --radius-sm:8px;
+      --shadow:0 8px 32px rgba(0,0,0,0.4);
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative}
+    
+    .bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px, rgba(108,92,231,0.05) 1px, transparent 0);background-size:40px 40px;pointer-events:none;z-index:0}
+    .bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle, rgba(108,92,231,0.1) 0%, transparent 70%);pointer-events:none;z-index:0}
+
+    .container{max-width:1200px;margin:0 auto;padding:24px;position:relative;z-index:1}
+
+    /* Top Bar Header */
+    .top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;width:100%}
+    .brand-group{display:flex;align-items:center;gap:14px}
+    .drive-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff}
+    .brand-title{font-size:1.35rem;font-weight:700;color:var(--text-bright);letter-spacing:-0.5px}
+    .brand-badge{font-size:0.75rem;font-weight:600;padding:2px 8px;background:rgba(108,92,231,0.15);border-radius:12px;color:var(--primary-light);text-transform:uppercase;margin-left:6px;border:1px solid rgba(108,92,231,0.3)}
+
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .nav-btn{padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);text-decoration:none;font-size:0.85rem;font-weight:500;transition:all 0.3s;display:flex;align-items:center;gap:6px}
+    .nav-btn:hover{border-color:var(--primary);color:var(--primary-light);background:rgba(108,92,231,0.1)}
+    .nav-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 2px 12px var(--primary-glow)}
+
+    .user-pill{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:24px;padding:4px 14px 4px 6px}
+    .user-avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:#fff}
+    .user-name{font-size:0.85rem;font-weight:600;color:var(--text-dim)}
+    .logout-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.95rem;padding:4px 6px;border-radius:6px;transition:all 0.2s}
+    .logout-btn:hover{background:rgba(255,107,107,0.15)}
+
+    .header-center{text-align:center;padding:10px 0 28px}
+    .logo-sub{color:var(--text-dim);font-size:0.95rem;font-weight:500}
+
+    .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px 22px;text-align:center;transition:all 0.3s;box-shadow:var(--shadow)}
+    .stat-card:hover{border-color:var(--primary);transform:translateY(-2px)}
+    .stat-value{font-size:2rem;font-weight:700;color:var(--primary-light)}
+    .stat-label{font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:4px;font-weight:600}
+
+    .upload-zone{background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius);padding:50px 40px;text-align:center;margin-bottom:32px;transition:all 0.3s;cursor:pointer;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+    .upload-zone:hover,.upload-zone.dragover{border-color:var(--primary);background:rgba(108,92,231,0.05);transform:translateY(-2px)}
+    .upload-icon{font-size:3.5rem;margin-bottom:16px;display:block}
+    .upload-title{font-size:1.35rem;font-weight:700;color:var(--text-bright);margin-bottom:8px}
+    /* Animated Button Effects */
+    button, .upload-btn, .nav-link, .logout-btn, .admin-link, .settings-link, .security-link {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .upload-btn::after, button.primary::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 50%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+      transform: rotate(25deg);
+      animation: btnLightRay 3.5s infinite ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes btnLightRay {
+      0% { left: -60%; opacity: 0; }
+      20% { opacity: 1; }
+      60% { left: 140%; opacity: 0; }
+      100% { left: 140%; opacity: 0; }
+    }
+    button:active, .upload-btn:active, .nav-link:active { transform: scale(0.96) !important; }
+
+    .upload-btn{display:inline-block;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;padding:12px 32px;border-radius:var(--radius-sm);font-weight:600;font-size:0.95rem;border:none;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 16px var(--primary-glow)}
+    .upload-btn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 25px var(--primary-glow)}
+    #fileInput{display:none}
+    .upload-limit{color:var(--text-dim);font-size:0.82rem;margin-top:14px}
+
+    .upload-progress{margin-bottom:24px;display:none}
+    .upload-progress.active{display:block}
+    .progress-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px}
+    .progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .progress-filename{font-weight:600;font-size:0.9rem;color:var(--text-bright)}
+    .progress-status{font-size:0.8rem;color:var(--text-dim)}
+    .progress-bar-bg{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+    .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-light));border-radius:3px;transition:width 0.3s;width:0}
+    .progress-bar-fill.done{background:var(--success)}
+    .progress-bar-fill.error{background:var(--danger)}
+    .progress-filename{font-weight:800;font-size:0.95rem;color:var(--text-bright)}
+    .progress-status{font-size:0.85rem;color:var(--text-dim);font-weight:700}
+    .progress-bar-bg{height:10px;background:rgba(255,255,255,0.08);border-radius:5px;overflow:hidden}
+    .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--neon-cyan),var(--neon-lime),var(--neon-magenta));border-radius:5px;transition:width 0.3s;width:0}
+    .progress-bar-fill.done{background:var(--success)}
+    .progress-bar-fill.error{background:var(--danger)}
+
+    .toolbar{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+    .search-box{flex:1;min-width:240px;position:relative}
+    .search-box input{width:100%;padding:12px 20px 12px 46px;background:rgba(20,20,35,0.6);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:30px;color:var(--text);font-size:0.95rem;outline:none;transition:all 0.3s;font-family:inherit}
+    .search-box input:focus{border-color:var(--accent-cyan);box-shadow:0 0 20px rgba(0,223,216,0.25)}
+    .search-box::before{content:"🔍";position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:1rem;color:var(--text-dim)}
+    .sort-btn,.refresh-btn,.trash-btn{background:rgba(20,20,35,0.6);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;transition:all 0.3s;backdrop-filter:blur(10px);font-family:inherit}
+    .sort-btn:hover,.refresh-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+    .trash-btn:hover,.trash-btn.active{border-color:var(--danger);color:var(--danger);box-shadow:0 0 16px rgba(255,71,87,0.3)}
+    .trash-badge{display:inline-block;background:var(--danger);color:#fff;font-size:0.72rem;padding:2px 7px;border-radius:10px;margin-left:6px;font-weight:800}
+
+    .files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px}
+    .file-card{background:var(--surface2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:var(--radius);padding:22px;transition:all 0.35s cubic-bezier(0.4, 0, 0.2, 1);position:relative;overflow:visible;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+    .file-card:hover{border-color:rgba(0,223,216,0.5);transform:translateY(-5px);box-shadow:0 16px 40px rgba(0,223,216,0.15)}
+
+    .file-icon{font-size:2.8rem;display:block;filter:drop-shadow(0 0 15px rgba(121,40,202,0.3))}
+    .file-thumb-container{position:relative;width:100%;height:165px;border-radius:var(--radius-sm);margin-bottom:14px;background:rgba(10,10,18,0.6);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .file-thumb-container img,.file-thumb-container video{width:100%;height:100%;object-fit:cover}
+    .file-thumb-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;background:rgba(0,0,0,0.7);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;pointer-events:none;border:2px solid rgba(255,255,255,0.3)}
+    
+    .file-name{font-weight:700;font-size:1.05rem;color:var(--text-bright);margin-bottom:6px;word-break:break-word;line-height:1.4}
+    .file-meta{display:flex;gap:14px;color:var(--text-dim);font-size:0.8rem;margin-bottom:16px;flex-wrap:wrap;font-weight:500}
+    .file-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+    .file-actions button{flex:1;padding:8px 10px;border:none;border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.25s;min-width:44px;font-family:inherit}
+    
+    .btn-download{background:linear-gradient(135deg,var(--primary),var(--accent-pink));color:#fff}
+    .btn-download:hover{transform:translateY(-1px);box-shadow:0 0 15px rgba(255,0,128,0.4)}
+    .btn-share{background:rgba(121,40,202,0.2);color:var(--primary-light);border:1px solid rgba(121,40,202,0.3) !important}
+    .btn-share:hover{background:var(--primary);color:#fff}
+    .btn-preview{background:rgba(0,223,216,0.15);color:var(--accent-cyan);border:1px solid rgba(0,223,216,0.3) !important}
+    .btn-preview:hover{background:var(--accent-cyan);color:#000}
+    .btn-email{background:rgba(255,0,128,0.15);color:var(--accent-pink);border:1px solid rgba(255,0,128,0.3) !important}
+    .btn-email:hover{background:var(--accent-pink);color:#fff}
+    .btn-delete{background:rgba(255,71,87,0.15);color:var(--danger);border:1px solid rgba(255,71,87,0.3) !important}
+    .btn-delete:hover{background:var(--danger);color:#fff}
+    .btn-restore{background:rgba(0,210,211,0.15);color:var(--success);border:1px solid rgba(0,210,211,0.3) !important}
+    .btn-restore:hover{background:var(--success);color:#000}
+
+    .empty-state{text-align:center;padding:90px 20px;color:var(--text-dim)}
+    .empty-icon{font-size:4.5rem;margin-bottom:20px;display:block;opacity:0.6;filter:drop-shadow(0 0 20px rgba(121,40,202,0.4))}
+    .empty-text{font-size:1.15rem;font-weight:600}
+
+    .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);z-index:1000;display:none;align-items:center;justify-content:center;animation:fadeIn 0.25s ease}
+    .modal-overlay.active{display:flex}
+    .modal{background:rgba(18,18,32,0.95);backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;max-width:500px;width:90%;position:relative;animation:slideUp 0.3s;box-shadow:var(--shadow-neon)}
+    .modal h3{font-size:1.3rem;margin-bottom:18px;color:var(--text-bright);font-weight:800}
+    .modal-close{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--text-dim);font-size:1.5rem;cursor:pointer}
+    .modal-close:hover{color:var(--text-bright)}
+    
+    .share-link-box{display:flex;gap:10px;margin-top:14px}
+    .share-link-box input{flex:1;padding:12px 16px;background:rgba(10,10,18,0.8);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.92rem;outline:none;font-family:inherit}
+    .copy-btn{padding:12px 24px;background:linear-gradient(135deg,var(--primary),var(--accent-pink));color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:700;transition:all 0.3s;font-family:inherit}
+    .copy-btn:hover{transform:scale(1.02);box-shadow:0 0 20px rgba(255,0,128,0.4)}
+
+    .toast{position:fixed;bottom:32px;right:32px;background:rgba(18,18,32,0.95);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 28px;color:var(--text-bright);font-size:0.92rem;font-weight:600;z-index:2000;animation:slideIn 0.3s ease;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+    .toast.success{border-color:var(--success);box-shadow:0 0 25px rgba(0,210,211,0.3)}
+    .toast.error{border-color:var(--danger);box-shadow:0 0 25px rgba(255,71,87,0.3)}
+
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+    @media(max-width:768px){
+      .stats-bar{grid-template-columns:repeat(2,1fr);gap:10px;padding:12px}
+      .files-grid{grid-template-columns:1fr;gap:14px}
+      .toolbar{flex-direction:column;gap:10px;align-items:stretch}
+      .top-bar{flex-direction:column;gap:12px;padding:14px;align-items:stretch}
+      .brand-group{justify-content:center}
+      .top-actions{justify-content:center;flex-wrap:wrap;gap:8px}
+      .nav-btn{padding:8px 12px;font-size:0.85rem}
+      .container{padding:14px}
+      .upload-zone{padding:30px 16px}
+      .modal{padding:20px;max-width:95%}
+      .file-actions{flex-wrap:wrap}
+    }
+    .email-progress{position:fixed;bottom:24px;left:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;width:320px;box-shadow:var(--shadow);z-index:1000;display:none;animation:slideUp 0.3s ease}
+    .email-progress.active{display:block}
+    .email-progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .email-progress-title{font-size:0.88rem;font-weight:600;color:var(--text-bright)}
+    .email-progress-pct{font-size:0.85rem;font-weight:700;color:var(--primary-light)}
+    .email-progress-filename{font-size:0.8rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
+    .email-progress-bar-bg{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px}
+    .email-progress-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--success));transition:width 0.2s}
+    .email-progress-bar-fill.done{background:var(--success)}
+    .email-progress-bar-fill.error{background:var(--danger)}
+    .email-progress-status{font-size:0.78rem;color:var(--text-dim)}
+
+    /* Drive Action Context Menu */
+    .file-card{position:relative;overflow:visible !important}
+    .menu-dots-btn{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-size:1.1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:15;transition:all 0.2s}
+    .menu-dots-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);transform:scale(1.05)}
+    
+    .card-context-menu{position:absolute;top:48px;right:12px;background:rgba(20,20,34,0.98);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.18);border-radius:var(--radius-sm);padding:6px;box-shadow:0 12px 36px rgba(0,0,0,0.8);z-index:9999;min-width:175px;display:none;flex-direction:column;gap:3px;animation:fadeIn 0.15s ease}
+    .card-context-menu.active{display:flex}
+    .menu-item-act{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:0.86rem;font-weight:500;color:var(--text-bright);border-radius:6px;cursor:pointer;transition:background 0.15s}
+    .menu-item-act:hover{background:rgba(108,92,231,0.25);color:var(--primary-light)}
+    .menu-item-act.danger:hover{background:rgba(255,107,107,0.25);color:var(--danger)}
+    .menu-item-act .icon{font-size:0.95rem}
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="brand-group">
+      <div class="drive-icon">📁</div>
+      <div>
+        <span class="brand-title">Abdullah Drive</span>
+        <span class="brand-badge">File Storage</span>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <a href="/app" class="nav-btn active">Files</a>
+      <a href="/documents" class="nav-btn">Workspace</a>
+      <a href="/settings" class="nav-btn">Settings</a>
+      <a href="/admin" class="nav-btn" id="adminLink" style="display:none">Admin</a>
+      
+      <div id="authNavGroup" style="display:flex;align-items:center;gap:8px">
+        <a href="/login" class="nav-btn" style="background:rgba(108,92,231,0.15);border-color:var(--primary);color:var(--primary-light)">Sign In</a>
+        <a href="/login?tab=register" class="nav-btn" style="background:var(--primary);border-color:var(--primary);color:#fff">Sign Up</a>
+      </div>
+
+      <div class="user-pill" id="userSection" style="display:none">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <span class="user-name" id="userName">User</span>
+        <button class="logout-btn" onclick="openLogoutModal()" title="Sign Out">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <div class="header-center">
+      <div class="logo-sub">Cloud storage, file sharing, and Docs workspace</div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-value" id="statFiles">0</div><div class="stat-label">Total Files</div></div>
+      <div class="stat-card"><div class="stat-value" id="statSize">0 B</div><div class="stat-label">Total Size</div></div>
+      <div class="stat-card"><div class="stat-value" id="statDownloads">0</div><div class="stat-label">Downloads</div></div>
+      <div class="stat-card"><div class="stat-value" id="statRecent">0</div><div class="stat-label">Today</div></div>
+    </div>
+
+    <div class="upload-zone" id="uploadZone">
+      <span class="upload-icon">📁</span>
+      <div class="upload-title">Drop files here or click to upload</div>
+      <div class="upload-subtitle">Upload any files - documents, images, videos, archives and more</div>
+      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose Files</button>
+      <input type="file" id="fileInput" multiple>
+      <div class="upload-limit">No file size limit - upload any size</div>
+    </div>
+
+    <div class="upload-progress" id="uploadProgress"></div>
+
+    <!-- Floating Bulk Actions Bar -->
+    <div id="bulkActionBar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(20,20,34,0.98);backdrop-filter:blur(20px);border:1px solid var(--primary);border-radius:30px;padding:10px 24px;display:none;align-items:center;gap:16px;z-index:9000;box-shadow:0 10px 30px rgba(0,0,0,0.8)">
+      <span id="bulkSelectCount" style="font-weight:700;color:var(--primary-light);font-size:0.9rem">0 selected</span>
+      <button onclick="downloadBulkZip()" style="background:linear-gradient(135deg,var(--primary),var(--accent-pink));color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer">📦 Download ZIP</button>
+      <button onclick="trashBulkFiles()" style="background:rgba(255,71,87,0.2);color:var(--danger);border:1px solid var(--danger);padding:8px 16px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer">🗑️ Move to Trash</button>
+      <button onclick="clearBulkSelection()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.85rem">✕ Clear</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search files..." oninput="debounceSearch()">
+      </div>
+      <button class="sort-btn" id="btnSharedWithMe" onclick="toggleSharedWithMeView()">👥 Shared with Me</button>
+      <button class="trash-btn" id="trashToggle" onclick="toggleTrashView()">🗑️ Trash <span class="trash-badge" id="trashCount">0</span></button>
+      <button class="sort-btn" id="sortBtn" onclick="toggleSort()">Sort by Date ↓</button>
+      <button class="refresh-btn" onclick="loadFiles()">Refresh</button>
+    </div>
+
+    <div class="files-grid" id="filesGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <span class="empty-icon">📭</span>
+      <div class="empty-text">No files uploaded yet. Drop some files to get started!</div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="shareModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeShareModal()">&times;</button>
+      <h3>Share File</h3>
+      <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:12px">Anyone with this link can download the file.</p>
+      <div class="share-link-box">
+        <input type="text" id="shareLink" readonly>
+        <button class="copy-btn" onclick="copyShareLink()">Copy</button>
+      </div>
+      <div style="margin-top:16px">
+        <label style="color:var(--text-dim);font-size:0.85rem;display:block;margin-bottom:8px">Link expires in:</label>
+        <div class="expire-options">
+          <button class="expire-btn active" onclick="setExpiry(null, this)">Never</button>
+          <button class="expire-btn" onclick="setExpiry(1, this)">1 Hour</button>
+          <button class="expire-btn" onclick="setExpiry(24, this)">24 Hours</button>
+          <button class="expire-btn" onclick="setExpiry(72, this)">3 Days</button>
+          <button class="expire-btn" onclick="setExpiry(168, this)">7 Days</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <label style="color:var(--text-bright);font-size:0.85rem;font-weight:600;display:block;margin-bottom:6px">🔒 Password Protection (Optional)</label>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="password" id="sharePassSetInput" placeholder="Set access password..." style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#fff;font-size:0.88rem;outline:none">
+          <button onclick="saveSharePassword()" style="padding:10px 16px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer">Set Password</button>
+        </div>
+
+        <label style="color:var(--text-bright);font-size:0.85rem;font-weight:600;display:block;margin-bottom:6px">⏳ Download Counter Limit (Optional)</label>
+        <div style="display:flex;gap:8px">
+          <input type="number" id="shareMaxDownloadsInput" placeholder="Max downloads (e.g. 5)..." min="1" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#fff;font-size:0.88rem;outline:none">
+          <button onclick="saveShareMaxDownloads()" style="padding:10px 16px;background:var(--surface2);border:1px solid var(--border);color:var(--neon-cyan);border-radius:6px;font-weight:600;cursor:pointer">Save Limit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Access Sharing Modal -->
+  <div class="modal-overlay" id="userShareModal">
+    <div class="modal" style="max-width:480px">
+      <button class="modal-close" onclick="closeUserShareModal()">&times;</button>
+      <h3>👥 Manage User Access</h3>
+      <p id="userShareFileName" style="color:var(--text-dim);font-size:0.88rem;margin-bottom:14px">Grant access roles (Viewer, Editor, Admin) to users registered on this platform.</p>
+      
+      <div style="background:var(--surface2);padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:16px">
+        <label style="color:var(--text-bright);font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px">Select Registered User</label>
+        <select id="userShareSelect" style="width:100%;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;outline:none;margin-bottom:12px">
+          <option value="">Loading users...</option>
+        </select>
+
+        <label style="color:var(--text-bright);font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px">Access Role</label>
+        <select id="userShareRole" style="width:100%;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;outline:none;margin-bottom:14px">
+          <option value="viewer">👁️ Viewer (Read & Download)</option>
+          <option value="editor">✏️ Editor (Read, Download & Rename)</option>
+          <option value="admin">🛡️ Admin / Co-owner (Full Control)</option>
+        </select>
+
+        <button onclick="confirmGrantUserAccess()" style="width:100%;padding:10px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer">Grant Access</button>
+      </div>
+
+      <h4 style="font-size:0.9rem;color:var(--text-bright);margin-bottom:8px">Users with Access</h4>
+      <div id="userShareList" style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        <p style="color:var(--text-dim);font-size:0.8rem;font-style:italic">Not shared with anyone yet.</p>
+      </div>
+
+      <div style="background:rgba(255,107,107,0.08);padding:12px;border-radius:6px;border:1px solid rgba(255,107,107,0.25)">
+        <h4 style="font-size:0.84rem;color:var(--danger);margin-bottom:4px">👑 Transfer Ownership</h4>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:8px">Transfer full ownership of this file to the selected user above.</p>
+        <button onclick="confirmTransferOwnership()" style="width:100%;padding:8px;background:rgba(255,71,87,0.2);color:var(--danger);border:1px solid var(--danger);border-radius:6px;font-weight:600;font-size:0.82rem;cursor:pointer">Transfer Ownership</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-modal" id="previewModal">
+    <button class="preview-close" onclick="closePreview()">&times;</button>
+    <div id="previewContent"></div>
+    <div class="preview-info" id="previewInfo"></div>
+  </div>
+
+  <div class="modal-overlay" id="permanentModal">
+    <div class="modal">
+      <h3>Permanently Delete File</h3>
+      <p id="permanentMsg" style="color:var(--text-dim);font-size:0.9rem;margin-bottom:16px">This will permanently delete the file. This cannot be undone.</p>
+      <div style="display:flex;gap:10px">
+        <button class="modal-cancel" onclick="closePermanentModal()" style="flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text)">Cancel</button>
+        <button class="btn-permanent" onclick="confirmPermanentDelete()" style="flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;cursor:pointer;background:linear-gradient(135deg,#e74c3c,#ff6b6b);color:#fff">Delete Forever</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="emailModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeEmailModal()">&times;</button>
+      <h3>📧 Send File via Email</h3>
+      <p id="emailFileTitle" style="color:var(--text-dim);font-size:0.9rem;margin-bottom:12px">Share this file with someone.</p>
+      <input type="text" id="emailTo" placeholder="recipient@email.com" style="width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.95rem;outline:none;margin-bottom:12px" onkeydown="if(event.key==='Enter')confirmFileEmailShare()">
+      <textarea id="emailMessage" placeholder="Add a message (optional)..." style="width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.95rem;outline:none;min-height:70px;resize:vertical;font-family:inherit;margin-bottom:12px"></textarea>
+      <div style="display:flex;gap:10px">
+        <button class="modal-cancel" onclick="closeEmailModal()" style="flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text)">Cancel</button>
+        <button class="copy-btn" onclick="confirmFileEmailShare()" style="flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;cursor:pointer">Send Email</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeLogoutModal()">&times;</button>
+      <h3>👋 Sign Out</h3>
+      <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:16px">Are you sure you want to sign out? You will need to log in again.</p>
+      <div style="display:flex;gap:10px">
+        <button class="modal-cancel" onclick="closeLogoutModal()" style="flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text)">Cancel</button>
+        <button class="btn-permanent" onclick="handleLogout()" style="flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;cursor:pointer;background:linear-gradient(135deg,#e74c3c,#ff6b6b);color:#fff">Yes, Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Progress Indicator -->
+  <div class="email-progress" id="emailProgress" style="display:none">
+    <div class="email-progress-header">
+      <span class="email-progress-title">📧 Sending File...</span>
+      <span class="email-progress-pct" id="emailProgressPct">0%</span>
+    </div>
+    <div class="email-progress-filename" id="emailProgressFile"></div>
+    <div class="email-progress-bar-bg"><div class="email-progress-bar-fill" id="emailProgressBar"></div></div>
+    <div class="email-progress-status" id="emailProgressStatus">Preparing...</div>
+  </div>
+
+  <script>
+    let allFiles = [];
+    let trashFiles = [];
+    let sortAsc = false;
+    let currentShareId = null;
+    let searchTimeout = null;
+    let authToken = localStorage.getItem('token');
+    let showingTrash = false;
+    let permanentDeleteId = null;
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' };
+    }
+
+    async function apiFetch(url, options = {}) {
+      if (!options.headers) options.headers = {};
+      options.headers['Authorization'] = 'Bearer ' + authToken;
+      if (options.body && typeof options.body === 'string') {
+        options.headers['Content-Type'] = 'application/json';
+      }
+      const res = await fetch(url, options);
+      if (res.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return null;
+      }
+      return res;
+    }
+
+    async function checkAuth() {
+      if (!authToken) { window.location.href = '/login'; return; }
+      try {
+        const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        const data = await res.json();
+        if (!data.success) { window.location.href = '/login'; return; }
+        const user = data.user;
+        const authNav = document.getElementById('authNavGroup');
+        if (authNav) authNav.style.display = 'none';
+        const sec = document.getElementById('userSection');
+        if (sec) sec.style.display = 'flex';
+        const name = document.getElementById('userName');
+        if (name) name.textContent = user.username;
+        const email = document.getElementById('userEmail');
+        if (email) email.textContent = user.email;
+        const avatar = document.getElementById('userAvatar');
+        if (avatar) avatar.textContent = user.username.charAt(0).toUpperCase();
+        if (user.role === 'admin') {
+          const badge = document.getElementById('adminBadge');
+          if (badge) badge.style.display = 'inline';
+          const link = document.getElementById('adminLink');
+          if (link) link.style.display = 'flex';
+        }
+      } catch (err) { window.location.href = '/login'; }
+    }
+
+    function openLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + authToken } });
+      } catch (err) {}
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleUpload(e.dataTransfer.files);
+    });
+    uploadZone.addEventListener('click', e => { if (e.target === uploadZone || e.target.closest('.upload-icon') || e.target.closest('.upload-title') || e.target.closest('.upload-subtitle')) fileInput.click(); });
+    fileInput.addEventListener('change', () => { if (fileInput.files.length) handleUpload(fileInput.files); fileInput.value = ''; });
+
+    async function handleUpload(files) {
+      const progressContainer = document.getElementById('uploadProgress');
+      progressContainer.classList.add('active');
+      const formData = new FormData();
+      const fileArr = Array.from(files);
+
+      fileArr.forEach(f => {
+        formData.append('files[]', f);
+      });
+      
+      fileArr.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'progress-item';
+        item.id = `prog-${f.name.replace(/[^a-z0-9]/gi, '_')}`;
+        item.innerHTML = `
+          <div class="progress-header">
+            <span class="progress-filename">${f.name}</span>
+            <span class="progress-status">Uploading...</span>
+          </div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-${f.name.replace(/[^a-z0-9]/gi, '_')}"></div></div>`;
+        progressContainer.appendChild(item);
+      });
+
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
+
+        xhr.upload.addEventListener('progress', e => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            fileArr.forEach(f => {
+              const bar = document.getElementById(`bar-${f.name.replace(/[^a-z0-9]/gi, '_')}`);
+              if (bar) bar.style.width = pct + '%';
+            });
+          }
+        });
+
+        xhr.onload = () => {
+          const res = JSON.parse(xhr.responseText);
+          fileArr.forEach(f => {
+            const item = document.getElementById(`prog-${f.name.replace(/[^a-z0-9]/gi, '_')}`);
+            if (item) {
+              const bar = item.querySelector('.progress-bar-fill');
+              const status = item.querySelector('.progress-status');
+              if (res.success) {
+                bar.style.width = '100%';
+                bar.classList.add('done');
+                status.textContent = 'Done!';
+                status.style.color = 'var(--success)';
+              } else {
+                bar.classList.add('error');
+                status.textContent = 'Failed';
+                status.style.color = 'var(--danger)';
+              }
+            }
+          });
+          showToast(res.success ? `${fileArr.length} file(s) uploaded successfully` : 'Upload failed', res.success ? 'success' : 'error');
+          setTimeout(() => { progressContainer.innerHTML = ''; progressContainer.classList.remove('active'); }, 2000);
+          loadFiles();
+        };
+
+        xhr.onerror = () => {
+          fileArr.forEach(f => {
+            const item = document.getElementById(`prog-${f.name.replace(/[^a-z0-9]/gi, '_')}`);
+            if (item) {
+              item.querySelector('.progress-bar-fill').classList.add('error');
+              item.querySelector('.progress-status').textContent = 'Error';
+              item.querySelector('.progress-status').style.color = 'var(--danger)';
+            }
+          });
+          showToast('Upload failed', 'error');
+        };
+
+        xhr.send(formData);
+      } catch (err) {
+        showToast('Upload failed: ' + err.message, 'error');
+      }
+    }
+
+    async function loadFiles() {
+      try {
+        const res = await apiFetch('/api/files');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          allFiles = data.files;
+          if (!showingTrash) renderFiles(allFiles);
+        }
+      } catch (err) {
+        console.error('Failed to load files:', err);
+      }
+      loadTrashCount();
+      loadStats();
+    }
+
+    async function loadTrashCount() {
+      try {
+        const res = await apiFetch('/api/files-trash');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          trashFiles = data.files;
+          document.getElementById('trashCount').textContent = trashFiles.length;
+          if (showingTrash) renderFiles(trashFiles, true);
+        }
+      } catch (err) {}
+    }
+
+    function toggleTrashView() {
+      showingTrash = !showingTrash;
+      const btn = document.getElementById('trashToggle');
+      const search = document.getElementById('searchInput');
+      if (showingTrash) {
+        btn.classList.add('active');
+        btn.innerHTML = '📄 Back to Files';
+        search.placeholder = 'Search trash...';
+        renderFiles(trashFiles, true);
+      } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '🗑️ Trash <span class="trash-badge" id="trashCount">' + trashFiles.length + '</span>';
+        search.placeholder = 'Search files...';
+        renderFiles(allFiles);
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await apiFetch('/api/stats');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('statFiles').textContent = data.stats.totalFiles;
+          document.getElementById('statSize').textContent = formatSize(data.stats.totalSize);
+          document.getElementById('statDownloads').textContent = data.stats.totalDownloads;
+          document.getElementById('statRecent').textContent = data.stats.recentUploads;
+        }
+      } catch (err) {}
+    }
+
+    function renderFiles(files, isTrash = false) {
+      const grid = document.getElementById('filesGrid');
+      const empty = document.getElementById('emptyState');
+      if (!files.length) { grid.innerHTML = ''; empty.style.display = 'block'; empty.querySelector('.empty-icon').textContent = isTrash ? '🗑️' : '📭'; empty.querySelector('.empty-text').textContent = isTrash ? 'Trash is empty.' : 'No files uploaded yet. Drop some files to get started!'; return; }
+      empty.style.display = 'none';
+
+      if (isTrash) {
+        grid.innerHTML = files.map(f => `
+          <div class="file-card" style="opacity:0.8;border-color:rgba(255,107,107,0.2)">
+            <span class="file-icon" style="opacity:0.5">${getFileIcon(f.originalName)}</span>
+            <div class="file-name" style="color:var(--text-dim)">${escapeHtml(f.originalName)}</div>
+            <div class="file-meta">
+              <span>${formatSize(f.size)}</span>
+              <span>Trashed ${formatDate(f.trashedAt)}</span>
+            </div>
+            <div class="file-actions">
+              <button class="btn-restore" onclick="restoreFile('${f.id}')">Restore</button>
+              <button class="btn-permanent" onclick="openPermanentDelete('${f.id}')">Delete Forever</button>
+            </div>
+          </div>`).join('');
+        return;
+      }
+
+      grid.innerHTML = files.map(f => {
+        const ext = (f.originalName || '').split('.').pop().toLowerCase();
+        const isImage = (f.mimeType && f.mimeType.startsWith('image/')) || ['jpg','jpeg','png','gif','svg','webp','bmp','ico'].includes(ext);
+        const isVideo = (f.mimeType && f.mimeType.startsWith('video/')) || ['mp4','webm','mov','avi','mkv'].includes(ext);
+        const thumbUrl = '/api/thumbnail/' + f.id + '?token=' + encodeURIComponent(authToken);
+        let thumbHtml = '';
+
+        if (isImage) {
+          thumbHtml = `<div class="file-thumb-container">
+            <img src="${thumbUrl}" loading="lazy" alt="${escapeHtml(f.originalName)}" onerror="this.parentElement.innerHTML='<span class=\\'file-icon\\'>${getFileIcon(f.originalName)}</span>'">
+          </div>`;
+        } else if (isVideo) {
+          thumbHtml = `<div class="file-thumb-container">
+            <video preload="metadata" muted onloadeddata="this.currentTime=1" src="${thumbUrl}" onerror="this.parentElement.innerHTML='<span class=\\'file-icon\\'>🎬</span>'"></video>
+            <div class="file-thumb-play">▶</div>
+          </div>`;
+        } else {
+          thumbHtml = `<div class="file-thumb-container" style="background:rgba(18,18,32,0.8);border:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+            <span class="file-icon" style="margin-bottom:6px">${getFileIcon(f.originalName)}</span>
+            <span style="background:rgba(108,92,231,0.25);color:var(--primary-light);font-size:0.7rem;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:1px;text-transform:uppercase">${escapeHtml(ext || 'FILE')}</span>
+          </div>`;
+        }
+
+        const ownerTag = f.ownerUsername ? `<span style="background:rgba(108,92,231,0.2);color:var(--primary-light);padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700;margin-bottom:6px;display:inline-block">Shared by @${escapeHtml(f.ownerUsername)} (${f.myRole || 'viewer'})</span>` : '';
+        const isChecked = selectedFileIds.has(f.id) ? 'checked' : '';
+
+        return `
+        <div class="file-card ${selectedFileIds.has(f.id) ? 'selected-card' : ''}">
+          <input type="checkbox" class="file-select-checkbox" onclick="toggleSelectFile('${f.id}', event)" ${isChecked} style="position:absolute;top:14px;left:14px;width:18px;height:18px;accent-color:var(--primary);cursor:pointer;z-index:10" title="Select File">
+          <button class="menu-dots-btn" onclick="toggleContextMenu('menu_${f.id}', event)" title="More Actions">⋮</button>
+          <div class="card-context-menu" id="menu_${f.id}">
+            <div class="menu-item-act" onclick="downloadFile('${f.id}'); closeAllContextMenus()"><span class="icon">⬇️</span> Download</div>
+            <div class="menu-item-act" onclick="openUserShareModal('${f.id}'); closeAllContextMenus()"><span class="icon">👥</span> User Access</div>
+            <div class="menu-item-act" onclick="shareFile('${f.id}'); closeAllContextMenus()"><span class="icon">🔗</span> Share Link</div>
+            <div class="menu-item-act" onclick="openFileEmailModal('${f.id}'); closeAllContextMenus()"><span class="icon">📧</span> Email Share</div>
+            ${canPreview(f.mimeType, f.originalName) ? `<div class="menu-item-act" onclick="previewFile('${f.id}'); closeAllContextMenus()"><span class="icon">👁️</span> Preview</div>` : ''}
+            <div class="menu-item-act danger" onclick="deleteFile('${f.id}'); closeAllContextMenus()"><span class="icon">🗑️</span> Move to Trash</div>
+          </div>
+          ${ownerTag}
+          ${thumbHtml}
+          <div class="file-name">${escapeHtml(f.originalName)}</div>
+          <div class="file-meta">
+            <span>${formatSize(f.size)}</span>
+            <span>${formatDate(f.uploadDate)}</span>
+            <span>${f.downloads || 0} downloads</span>
+          </div>
+          <div class="file-actions">
+            <button class="btn-download" onclick="downloadFile('${f.id}')" title="Download">⬇️ Download</button>
+            <button class="btn-share" onclick="openUserShareModal('${f.id}')" title="Share with User">👥 Access</button>
+            <button class="btn-email" onclick="openFileEmailModal('${f.id}')" title="Email Share">📧 Email</button>
+            ${canPreview(f.mimeType, f.originalName) ? `<button class="btn-preview" onclick="previewFile('${f.id}')" title="Preview">👁️</button>` : ''}
+            ${!showingShared ? `<button class="btn-delete" onclick="deleteFile('${f.id}')" title="Move to Trash">🗑️</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function getFileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      const icons = {
+        pdf:'📄',doc:'📝',docx:'📝',txt:'📃',md:'📃',
+        jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',svg:'🖼️',webp:'🖼️',bmp:'🖼️',
+        mp4:'🎬',avi:'🎬',mov:'🎬',mkv:'🎬',webm:'🎬',
+        mp3:'🎵',wav:'🎵',flac:'🎵',ogg:'🎵',aac:'🎵',
+        zip:'📦',rar:'📦','7z':'📦',tar:'📦',gz:'📦',
+        js:'💻',ts:'💻',py:'💻',java:'💻',cpp:'💻',html:'💻',css:'💻',
+        xls:'📊',xlsx:'📊',csv:'📊',ppt:'📊',pptx:'📊',
+        exe:'⚙️',dmg:'⚙️',apk:'⚙️'
+      };
+      return icons[ext] || '📎';
+    }
+
+    function canPreview(mime, name = '') {
+      const ext = name ? name.split('.').pop().toLowerCase() : '';
+      const textExts = ['txt', 'md', 'json', 'js', 'ts', 'py', 'html', 'css', 'xml', 'sh', 'c', 'cpp', 'java', 'log'];
+      if (ext && textExts.includes(ext)) return true;
+      return mime && (mime.startsWith('image/') || mime.startsWith('video/') || mime.startsWith('audio/') || mime === 'application/pdf' || mime.startsWith('text/'));
+    }
+
+    function formatSize(bytes) {
+      if (!bytes) return '0 B';
+      const units = ['B','KB','MB','GB','TB'];
+      let i = 0;
+      while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+      return bytes.toFixed(i ? 1 : 0) + ' ' + units[i];
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      const now = new Date();
+      const diff = now - d;
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+      if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+      return d.toLocaleDateString();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function downloadFile(id) {
+      try {
+        const res = await apiFetch(`/api/download/${id}`);
+        if (!res) return;
+        const blob = await res.blob();
+        const file = allFiles.find(f => f.id === id);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file ? file.originalName : 'download';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        showToast('Download failed', 'error');
+      }
+    }
+
+    function shareFile(id) {
+      currentShareId = id;
+      const file = allFiles.find(f => f.id === id);
+      if (file) {
+        const link = `${window.location.origin}/share/${file.shareToken}`;
+        document.getElementById('shareLink').value = link;
+        document.getElementById('shareModal').classList.add('active');
+        document.querySelectorAll('.expire-btn').forEach(b => b.classList.remove('active'));
+        
+        let foundBtn = false;
+        if (file.expiresAt) {
+          const expTime = new Date(file.expiresAt).getTime();
+          const diffHours = Math.round((expTime - Date.now()) / 3600000);
+          const buttons = document.querySelectorAll('.expire-btn');
+          if (diffHours >= 1 && diffHours <= 2 && buttons[1]) { buttons[1].classList.add('active'); foundBtn = true; }
+          else if (diffHours >= 20 && diffHours <= 26 && buttons[2]) { buttons[2].classList.add('active'); foundBtn = true; }
+          else if (diffHours >= 65 && diffHours <= 75 && buttons[3]) { buttons[3].classList.add('active'); foundBtn = true; }
+          else if (diffHours >= 160 && diffHours <= 175 && buttons[4]) { buttons[4].classList.add('active'); foundBtn = true; }
+        }
+        if (!foundBtn && document.querySelector('.expire-btn')) document.querySelector('.expire-btn').classList.add('active');
+      }
+    }
+
+    let showingShared = false;
+    let sharedFilesList = [];
+    let currentShareFileId = null;
+    let selectedFileIds = new Set();
+
+    function toggleSelectFile(id, event) {
+      if (event) event.stopPropagation();
+      if (selectedFileIds.has(id)) {
+        selectedFileIds.delete(id);
+      } else {
+        selectedFileIds.add(id);
+      }
+      updateBulkBar();
+      if (showingShared) renderFiles(sharedFilesList);
+      else renderFiles(allFiles);
+    }
+
+    function updateBulkBar() {
+      const bar = document.getElementById('bulkActionBar');
+      const countEl = document.getElementById('bulkSelectCount');
+      if (selectedFileIds.size > 0) {
+        bar.style.display = 'flex';
+        countEl.textContent = `${selectedFileIds.size} file${selectedFileIds.size !== 1 ? 's' : ''} selected`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    function clearBulkSelection() {
+      selectedFileIds.clear();
+      updateBulkBar();
+      if (showingShared) renderFiles(sharedFilesList);
+      else renderFiles(allFiles);
+    }
+
+    async function downloadBulkZip() {
+      if (!selectedFileIds.size) return;
+      const ids = Array.from(selectedFileIds);
+      showToast(`Generating ZIP for ${ids.length} file(s)...`, 'success');
+      try {
+        const res = await apiFetch('/api/files/bulk-zip', {
+          method: 'POST',
+          body: JSON.stringify({ ids })
+        });
+        if (res) {
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `abdullah_drive_files_${Date.now()}.zip`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          showToast('ZIP downloaded successfully!', 'success');
+          clearBulkSelection();
+        }
+      } catch (e) { showToast('Failed to create ZIP archive', 'error'); }
+    }
+
+    async function trashBulkFiles() {
+      if (!selectedFileIds.size) return;
+      const ids = Array.from(selectedFileIds);
+      if (!confirm(`Move ${ids.length} selected file(s) to trash?`)) return;
+      try {
+        const res = await apiFetch('/api/files/bulk-trash', {
+          method: 'POST',
+          body: JSON.stringify({ ids })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast(data.message || 'Files moved to trash', 'success');
+            clearBulkSelection();
+            loadFiles();
+          }
+        }
+      } catch (e) { showToast('Failed to move files to trash', 'error'); }
+    }
+
+    async function saveSharePassword() {
+      if (!currentShareId) return;
+      const password = document.getElementById('sharePassSetInput').value.trim();
+      try {
+        const res = await apiFetch(`/api/files/${currentShareId}/share-password`, {
+          method: 'PUT',
+          body: JSON.stringify({ password })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast(password ? 'Passcode protection set!' : 'Passcode removed!', 'success');
+          }
+        }
+      } catch (e) { showToast('Failed to set password', 'error'); }
+    }
+
+    async function saveShareMaxDownloads() {
+      if (!currentShareId) return;
+      const maxDownloads = document.getElementById('shareMaxDownloadsInput').value.trim();
+      try {
+        const res = await apiFetch(`/api/files/${currentShareId}/share-options`, {
+          method: 'PUT',
+          body: JSON.stringify({ maxDownloads: maxDownloads ? Number(maxDownloads) : 0 })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast(maxDownloads ? `Download limit set to ${maxDownloads}` : 'Download limit removed', 'success');
+          }
+        }
+      } catch (e) { showToast('Failed to set download limit', 'error'); }
+    }
+
+    async function toggleSharedWithMeView() {
+      showingShared = !showingShared;
+      const btn = document.getElementById('btnSharedWithMe');
+      if (showingShared) {
+        showingTrash = false;
+        document.getElementById('trashToggle').classList.remove('active');
+        btn.classList.add('active');
+        btn.style.borderColor = 'var(--primary)';
+        btn.style.color = 'var(--primary-light)';
+        try {
+          const res = await apiFetch('/api/files/shared-with-me');
+          if (res) {
+            const data = await res.json();
+            if (data.success) {
+              sharedFilesList = data.files || [];
+              renderFiles(sharedFilesList);
+            }
+          }
+        } catch (e) { showToast('Failed to load shared files', 'error'); }
+      } else {
+        btn.classList.remove('active');
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        renderFiles(allFiles);
+      }
+    }
+
+    async function openUserShareModal(fileId) {
+      currentShareFileId = fileId;
+      const file = allFiles.find(f => f.id === fileId) || sharedFilesList.find(f => f.id === fileId);
+      if (!file) return;
+      document.getElementById('userShareFileName').textContent = `Manage registered user access for "${file.originalName}"`;
+      document.getElementById('userShareModal').classList.add('active');
+
+      const select = document.getElementById('userShareSelect');
+      select.innerHTML = '<option value="">Loading users...</option>';
+      try {
+        const res = await apiFetch('/api/users/list');
+        if (res) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.users)) {
+            if (data.users.length === 0) {
+              select.innerHTML = '<option value="">No other registered users found</option>';
+            } else {
+              select.innerHTML = '<option value="">-- Select User --</option>' + data.users.map(u => `<option value="${u.id}">${escapeHtml(u.username)} (${escapeHtml(u.email)})</option>`).join('');
+            }
+          }
+        }
+      } catch (err) {
+        select.innerHTML = '<option value="">Error loading users</option>';
+      }
+
+      renderUserShareList(file);
+    }
+
+    function closeUserShareModal() {
+      document.getElementById('userShareModal').classList.remove('active');
+      currentShareFileId = null;
+    }
+
+    function renderUserShareList(file) {
+      const container = document.getElementById('userShareList');
+      if (!file.sharedWith || !file.sharedWith.length) {
+        container.innerHTML = '<p style="color:var(--text-dim);font-size:0.8rem;font-style:italic">Not shared with anyone yet.</p>';
+        return;
+      }
+
+      container.innerHTML = file.sharedWith.map(s => {
+        const roleBadge = s.role === 'admin' ? '<span style="background:rgba(121,40,202,0.3);color:var(--primary-light);padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">🛡️ Admin</span>' :
+                          s.role === 'editor' ? '<span style="background:rgba(0,223,216,0.2);color:var(--accent-cyan);padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">✏️ Editor</span>' :
+                          '<span style="background:rgba(255,255,255,0.1);color:var(--text-dim);padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">👁️ Viewer</span>';
+
+        return `<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);padding:8px 12px;border-radius:6px;border:1px solid var(--border)">
+          <div>
+            <strong style="color:var(--text-bright);font-size:0.85rem">${escapeHtml(s.username)}</strong>
+            <span style="color:var(--text-dim);font-size:0.78rem;margin-left:6px">(${escapeHtml(s.email)})</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${roleBadge}
+            <button onclick="revokeUserAccess('${s.userId}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.85rem" title="Revoke Access">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function confirmGrantUserAccess() {
+      if (!currentShareFileId) return;
+      const targetUser = document.getElementById('userShareSelect').value;
+      const role = document.getElementById('userShareRole').value;
+      if (!targetUser) {
+        showToast('Please select a target user', 'error');
+        return;
+      }
+      try {
+        const res = await apiFetch(`/api/files/${currentShareFileId}/share-user`, {
+          method: 'POST',
+          body: JSON.stringify({ targetUser, role })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast(data.message || 'Access granted!', 'success');
+            const file = allFiles.find(f => f.id === currentShareFileId);
+            if (file) file.sharedWith = data.sharedWith;
+            renderUserShareList(file || { sharedWith: data.sharedWith });
+          } else {
+            showToast(data.error || 'Failed to grant access', 'error');
+          }
+        }
+      } catch (err) {
+        showToast('Failed to grant access', 'error');
+      }
+    }
+
+    async function revokeUserAccess(targetUserId) {
+      if (!currentShareFileId || !targetUserId) return;
+      try {
+        const res = await apiFetch(`/api/files/${currentShareFileId}/unshare-user`, {
+          method: 'POST',
+          body: JSON.stringify({ targetUserId })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast('Access revoked', 'success');
+            const file = allFiles.find(f => f.id === currentShareFileId);
+            if (file) file.sharedWith = data.sharedWith;
+            renderUserShareList(file || { sharedWith: data.sharedWith });
+          } else {
+            showToast(data.error || 'Failed to revoke access', 'error');
+          }
+        }
+      } catch (err) { showToast('Failed to revoke access', 'error'); }
+    }
+
+    async function confirmTransferOwnership() {
+      if (!currentShareFileId) return;
+      const targetUser = document.getElementById('userShareSelect').value;
+      if (!targetUser) {
+        showToast('Please select a registered user to transfer ownership to', 'error');
+        return;
+      }
+      if (!confirm('Are you sure you want to transfer full ownership of this file?')) return;
+      try {
+        const res = await apiFetch(`/api/files/${currentShareFileId}/transfer-ownership`, {
+          method: 'POST',
+          body: JSON.stringify({ targetUserId: targetUser })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast(data.message || 'Ownership transferred successfully!', 'success');
+            closeUserShareModal();
+            loadFiles();
+          } else {
+            showToast(data.error || 'Failed to transfer ownership', 'error');
+          }
+        }
+      } catch (err) { showToast('Failed to transfer ownership', 'error'); }
+    }
+
+    function closeShareModal() { document.getElementById('shareModal').classList.remove('active'); currentShareId = null; }
+
+    function copyShareLink() {
+      const input = document.getElementById('shareLink');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => showToast('Link copied to clipboard!', 'success'));
+    }
+
+    async function setExpiry(hours, btn) {
+      document.querySelectorAll('.expire-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (currentShareId) {
+        try {
+          const res = await apiFetch(`/api/files/${currentShareId}/expire`, {
+            method: 'PUT',
+            body: JSON.stringify({ hours })
+          });
+          if (res) {
+            const data = await res.json();
+            if (data.success && data.file) {
+              const idx = allFiles.findIndex(f => f.id === currentShareId);
+              if (idx !== -1) allFiles[idx] = data.file;
+              showToast(hours ? `Link set to expire in ${hours}h` : 'Link set to never expire', 'success');
+            }
+          }
+        } catch (err) {}
+      }
+    }
+
+    async function deleteFile(id) {
+      const file = (showingTrash ? trashFiles : allFiles).find(f => f.id === id);
+      if (!confirm(`Move "${file ? file.originalName : 'this file'}" to trash?`)) return;
+      try {
+        const res = await apiFetch(`/api/files/${id}`, { method: 'DELETE' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('File moved to trash', 'success');
+          loadFiles();
+        } else {
+          showToast('Failed to delete file', 'error');
+        }
+      } catch (err) {
+        showToast('Failed to delete file', 'error');
+      }
+    }
+
+    async function restoreFile(id) {
+      try {
+        const res = await apiFetch(`/api/files/${id}/restore`, { method: 'POST' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('File restored', 'success');
+          loadFiles();
+        }
+      } catch (err) { showToast('Failed to restore', 'error'); }
+    }
+
+    function openPermanentDelete(id) {
+      const file = trashFiles.find(f => f.id === id);
+      if (!file) return;
+      permanentDeleteId = id;
+      document.getElementById('permanentMsg').textContent = `Permanently delete "${file.originalName}"? This cannot be undone.`;
+      document.getElementById('permanentModal').classList.add('active');
+    }
+
+    function closePermanentModal() {
+      document.getElementById('permanentModal').classList.remove('active');
+      permanentDeleteId = null;
+    }
+
+    async function confirmPermanentDelete() {
+      const id = permanentDeleteId;
+      closePermanentModal();
+      try {
+        const res = await apiFetch(`/api/files/${id}/permanent`, { method: 'DELETE' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('File permanently deleted', 'success');
+          loadFiles();
+        }
+      } catch (err) { showToast('Failed to delete', 'error'); }
+    }
+
+    // --- File Email Share ---
+    let emailFileId = null;
+
+    function openFileEmailModal(id) {
+      const file = (showingTrash ? trashFiles : allFiles).find(f => f.id === id);
+      if (!file) return;
+      emailFileId = id;
+      document.getElementById('emailFileTitle').textContent = `Send "${file.originalName}" via email.`;
+      document.getElementById('emailTo').value = '';
+      document.getElementById('emailMessage').value = '';
+      document.getElementById('emailModal').classList.add('active');
+      setTimeout(() => document.getElementById('emailTo').focus(), 100);
+    }
+
+    function closeEmailModal() {
+      document.getElementById('emailModal').classList.remove('active');
+      emailFileId = null;
+    }
+
+    function showLogoutConfirm() {
+      document.getElementById('logoutModal').classList.add('active');
+    }
+
+    function closeLogoutModal() {
+      document.getElementById('logoutModal').classList.remove('active');
+    }
+
+    async function confirmFileEmailShare() {
+      const to = document.getElementById('emailTo').value.trim();
+      const message = document.getElementById('emailMessage').value.trim();
+      if (!to || !/\S+@\S+\.\S+/.test(to)) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+      }
+      const id = emailFileId;
+      const file = (showingTrash ? trashFiles : allFiles).find(f => f.id === id);
+      const fileName = file ? file.originalName : 'file';
+      closeEmailModal();
+
+      const progressEl = document.getElementById('emailProgress');
+      const progressBar = document.getElementById('emailProgressBar');
+      const progressPct = document.getElementById('emailProgressPct');
+      const progressFile = document.getElementById('emailProgressFile');
+      const progressStatus = document.getElementById('emailProgressStatus');
+
+      progressEl.classList.add('active');
+      progressBar.className = 'email-progress-bar-fill';
+      progressBar.style.width = '0%';
+      progressPct.textContent = '0%';
+      progressFile.textContent = fileName;
+      progressStatus.textContent = 'Preparing...';
+      progressStatus.style.color = '';
+
+      let pct = 0;
+      const timer = setInterval(() => {
+        if (pct < 90) {
+          pct += Math.random() * 8 + 2;
+          if (pct > 90) pct = 90;
+          progressBar.style.width = pct + '%';
+          progressPct.textContent = Math.round(pct) + '%';
+          if (pct > 30) progressStatus.textContent = 'Sending to server...';
+          if (pct > 60) progressStatus.textContent = 'Sending email...';
+        }
+      }, 300);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/files/' + id + '/share-email');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) {
+          const uploadPct = Math.round((e.loaded / e.total) * 90);
+          clearInterval(timer);
+          progressBar.style.width = uploadPct + '%';
+          progressPct.textContent = uploadPct + '%';
+          if (uploadPct < 30) progressStatus.textContent = 'Uploading file...';
+          else if (uploadPct < 60) progressStatus.textContent = 'Processing...';
+          else if (uploadPct < 90) progressStatus.textContent = 'Sending email...';
+        }
+      });
+
+      xhr.onload = () => {
+        clearInterval(timer);
+        let data;
+        try { data = JSON.parse(xhr.responseText); } catch (e) { data = { success: false, error: 'Invalid response' }; }
+        if (data.success) {
+          progressBar.style.width = '100%';
+          progressBar.classList.add('done');
+          progressPct.textContent = '100%';
+          progressStatus.textContent = 'Sent to ' + to;
+          progressStatus.style.color = 'var(--success)';
+          showToast('File sent to ' + to, 'success');
+        } else {
+          progressBar.classList.add('error');
+          progressBar.style.width = '100%';
+          progressStatus.textContent = data.error || 'Failed to send';
+          progressStatus.style.color = 'var(--danger)';
+          showToast(data.error || 'Failed to send email', 'error');
+        }
+        setTimeout(() => { progressEl.classList.remove('active'); progressStatus.style.color = ''; }, 3000);
+      };
+
+      xhr.onerror = () => {
+        clearInterval(timer);
+        progressBar.classList.add('error');
+        progressBar.style.width = '100%';
+        progressStatus.textContent = 'Connection error';
+        progressStatus.style.color = 'var(--danger)';
+        showToast('Failed to send email', 'error');
+        setTimeout(() => { progressEl.classList.remove('active'); progressStatus.style.color = ''; }, 3000);
+      };
+
+      xhr.send(JSON.stringify({ to: to, message: message }));
+    }
+
+    function canPreview(mime, filename = '') {
+      const ext = (filename || '').split('.').pop().toLowerCase();
+      const codeExts = ['js','ts','py','html','css','json','php','cpp','c','h','sql','md','txt','log','sh','xml','yaml','yml'];
+      const mediaExts = ['jpg','jpeg','png','gif','svg','webp','bmp','mp4','webm','mov','avi','mp3','wav','flac','pdf'];
+      return (mime && (mime.startsWith('image/') || mime.startsWith('video/') || mime.startsWith('audio/') || mime === 'application/pdf' || mime.startsWith('text/'))) || codeExts.includes(ext) || mediaExts.includes(ext);
+    }
+
+    async function previewFile(id) {
+      const file = allFiles.find(f => f.id === id) || sharedFilesList.find(f => f.id === id);
+      if (!file) return;
+      const content = document.getElementById('previewContent');
+      const info = document.getElementById('previewInfo');
+      const ext = (file.originalName || '').split('.').pop().toLowerCase();
+
+      info.textContent = `${file.originalName} - ${formatSize(file.size)}`;
+      content.innerHTML = '<div style="color:var(--text-dim);padding:30px">Loading preview...</div>';
+      document.getElementById('previewModal').classList.add('active');
+
+      const isImage = (file.mimeType && file.mimeType.startsWith('image/')) || ['jpg','jpeg','png','gif','svg','webp','bmp','ico'].includes(ext);
+      const isVideo = (file.mimeType && file.mimeType.startsWith('video/')) || ['mp4','webm','mov','avi','mkv'].includes(ext);
+      const isAudio = (file.mimeType && file.mimeType.startsWith('audio/')) || ['mp3','wav','flac','ogg','aac'].includes(ext);
+      const isPdf = file.mimeType === 'application/pdf' || ext === 'pdf';
+      const isCode = ['js','ts','py','html','css','json','php','cpp','c','h','sql','md','txt','log','sh','xml','yaml','yml'].includes(ext) || (file.mimeType && file.mimeType.startsWith('text/'));
+
+      try {
+        const res = await apiFetch(`/api/preview/${id}`);
+        if (!res) return;
+
+        if (isImage) {
+          const blob = await res.blob();
+          content.innerHTML = `<img src="${URL.createObjectURL(blob)}" class="preview-content" style="max-width:85vw;max-height:75vh;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.8)" alt="${escapeHtml(file.originalName)}">`;
+        } else if (isVideo) {
+          const blob = await res.blob();
+          content.innerHTML = `<video controls class="preview-content" style="max-width:85vw;max-height:75vh;border-radius:12px"><source src="${URL.createObjectURL(blob)}" type="${file.mimeType || 'video/mp4'}"></video>`;
+        } else if (isAudio) {
+          const blob = await res.blob();
+          content.innerHTML = `<div style="text-align:center;background:rgba(20,20,34,0.9);padding:40px 60px;border-radius:20px;border:1px solid var(--border);box-shadow:0 15px 45px rgba(0,0,0,0.8)">
+            <div style="font-size:5rem;margin-bottom:16px;animation:pulse 2s infinite">🎵</div>
+            <h3 style="color:#fff;margin-bottom:16px;font-size:1.1rem">${escapeHtml(file.originalName)}</h3>
+            <audio controls style="width:320px"><source src="${URL.createObjectURL(blob)}" type="${file.mimeType || 'audio/mpeg'}"></audio>
+          </div>`;
+        } else if (isPdf) {
+          const blob = await res.blob();
+          content.innerHTML = `<iframe src="${URL.createObjectURL(blob)}" class="preview-content" style="width:82vw;height:82vh;border:none;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.8)"></iframe>`;
+        } else if (isCode) {
+          const text = await res.text();
+          const lines = text.split('\n');
+          const numberedCode = lines.map((line, idx) => `<span style="color:#555;user-select:none;margin-right:16px;display:inline-block;width:30px;text-align:right">${idx + 1}</span>${escapeHtml(line)}`).join('\n');
+          
+          content.innerHTML = `<div style="background:#0d0d16;border:1px solid var(--border);border-radius:12px;width:82vw;max-height:78vh;display:flex;flex-direction:column;overflow:hidden">
+            <div style="background:#141424;padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+              <span style="font-family:monospace;font-size:0.85rem;color:var(--primary-light)">💻 ${escapeHtml(file.originalName)}</span>
+              <span style="font-size:0.75rem;color:var(--text-dim)">${lines.length} lines</span>
+            </div>
+            <pre style="padding:18px;margin:0;overflow:auto;color:#e2e2f0;font-family:'Space Grotesk',monospace;font-size:0.88rem;line-height:1.6;tab-size:2">${numberedCode}</pre>
+          </div>`;
+        } else {
+          content.innerHTML = `<p style="color:var(--text-dim);padding:30px">Preview not available for this file type</p>`;
+        }
+      } catch (err) {
+        content.innerHTML = `<p style="color:var(--danger);padding:30px">Failed to load preview</p>`;
+      }
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').classList.remove('active');
+      document.getElementById('previewContent').innerHTML = '';
+    }
+
+    function toggleSort() {
+      sortAsc = !sortAsc;
+      document.getElementById('sortBtn').textContent = `Sort by Date ${sortAsc ? '↑' : '↓'}`;
+      renderFiles(sortAsc ? [...allFiles].reverse() : allFiles);
+    }
+
+    function debounceSearch() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(searchFiles, 300);
+    }
+
+    async function searchFiles() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (showingTrash) {
+        if (!q) { renderFiles(trashFiles, true); return; }
+        const filtered = trashFiles.filter(f => f.originalName.toLowerCase().includes(q.toLowerCase()));
+        renderFiles(filtered, true);
+        return;
+      }
+      if (!q) { renderFiles(allFiles); return; }
+      try {
+        const res = await apiFetch(`/api/search?q=${encodeURIComponent(q)}`);
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) renderFiles(data.files);
+      } catch (err) {}
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `${type === 'success' ? '✓' : '✕'} ${message}`;
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function toggleContextMenu(menuId, event) {
+      if (event) event.stopPropagation();
+      const targetMenu = document.getElementById(menuId);
+      const isOpen = targetMenu ? targetMenu.classList.contains('active') : false;
+      closeAllContextMenus();
+      if (targetMenu && !isOpen) {
+        targetMenu.classList.add('active');
+      }
+    }
+
+    function closeAllContextMenus() {
+      document.querySelectorAll('.card-context-menu').forEach(m => m.classList.remove('active'));
+    }
+
+    document.addEventListener('click', closeAllContextMenus);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        if (document.getElementById('logoutModal').classList.contains('active')) { closeLogoutModal(); return; }
+        if (document.getElementById('permanentModal').classList.contains('active')) { closePermanentModal(); return; }
+        if (document.getElementById('emailModal').classList.contains('active')) { closeEmailModal(); return; }
+        closeShareModal();
+        closePreview();
+      }
+    });
+
+    document.getElementById('shareModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeShareModal(); });
+    document.getElementById('previewModal').addEventListener('click', e => { if (e.target === e.currentTarget) closePreview(); });
+
+    checkAuth().then(() => loadFiles());
+  </script>
+  <div class="creator-credit" style="text-align: center; margin-top: 40px; padding-bottom: 20px; color: var(--text-dim); font-size: 0.9rem; font-weight: 500; opacity: 0.8; width: 100%;">Created by Abdullah</div>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup 2FA — Abdullah Drive</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0a0a0f;
+      --surface:#12121a;
+      --surface2:#1a1a28;
+      --border:#2a2a3a;
+      --primary:#6c5ce7;
+      --primary-glow:rgba(108,92,231,0.3);
+      --primary-light:#a29bfe;
+      --danger:#ff6b6b;
+      --success:#00cec9;
+      --warning:#fdcb6e;
+      --text:#e2e2f0;
+      --text-dim:#8888a0;
+      --text-bright:#fff;
+      --radius:12px;
+      --radius-sm:8px;
+      --shadow:0 8px 32px rgba(0,0,0,0.4);
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative}
+    .bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px, rgba(108,92,231,0.05) 1px, transparent 0);background-size:40px 40px;pointer-events:none;z-index:0}
+    .bg-glow{position:fixed;top:-250px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle, rgba(108,92,231,0.1) 0%, transparent 70%);pointer-events:none;z-index:0}
+
+    .auth-wrapper{position:relative;z-index:1;width:100%;max-width:480px}
+    .auth-header{text-align:center;margin-bottom:30px}
+    .logo{font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--primary-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+    .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:36px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+    .auth-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--primary-light),var(--success))}
+
+    .form-group{margin-bottom:20px}
+    .form-label{display:block;font-size:0.8rem;font-weight:500;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+    .form-input{width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.95rem;outline:none;transition:all 0.3s;font-family:inherit}
+    .form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+
+    .submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:var(--radius-sm);font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.3s;margin-top:10px;font-family:inherit}
+    .submit-btn:hover{transform:scale(1.03);box-shadow:0 0 45px rgba(0,240,255,0.6)}
+    .submit-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+    .submit-btn.danger{background:linear-gradient(135deg,#e74c3c,var(--danger))}
+
+    .back-btn{width:100%;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.3s;margin-top:10px;text-align:center;text-decoration:none;display:block;font-family:inherit}
+    .back-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+
+    .error-msg{background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.3);border-radius:var(--radius-sm);padding:12px 16px;color:var(--danger);font-size:0.88rem;font-weight:600;margin-bottom:18px;display:none}
+    .error-msg.show{display:block}
+
+    .success-msg{background:rgba(0,210,211,0.15);border:1px solid rgba(0,210,211,0.3);border-radius:var(--radius-sm);padding:12px 16px;color:var(--success);font-size:0.88rem;font-weight:600;margin-bottom:18px;display:none}
+    .success-msg.show{display:block}
+
+    .qr-container{text-align:center;padding:24px;background:rgba(10,10,18,0.8);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:20px}
+    .qr-container img{max-width:200px;border-radius:12px;background:#fff;padding:10px;box-shadow:0 0 20px rgba(0,0,0,0.5)}
+    .secret-box{background:rgba(10,10,18,0.8);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;margin:18px 0;text-align:center}
+    .secret-code{font-family:monospace;font-size:1.15rem;color:var(--accent-cyan);letter-spacing:2px;word-break:break-all;font-weight:700}
+
+    .info-text{color:var(--text-dim);font-size:0.88rem;margin-bottom:18px;line-height:1.6;font-weight:500}
+    .step-num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent-pink));color:#fff;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;margin-right:8px}
+
+    .status-badge{display:inline-block;padding:6px 14px;border-radius:var(--radius-sm);font-size:0.82rem;font-weight:700}
+    .status-enabled{background:rgba(0,210,211,0.15);color:var(--success);border:1px solid rgba(0,210,211,0.3)}
+    .status-disabled{background:rgba(255,71,87,0.15);color:var(--danger);border:1px solid rgba(255,71,87,0.3)}
+
+    .hidden{display:none !important}
+
+    .password-toggle{position:relative}
+    .password-toggle .form-input{padding-right:44px}
+    .toggle-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1.1rem;padding:4px}
+
+    @media(max-width:480px){.auth-card{padding:24px 20px}}
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <div class="auth-wrapper">
+    <div class="auth-header">
+      <div class="logo">Abdullah File Share</div>
+    </div>
+
+    <div class="auth-card">
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="success-msg" id="successMsg"></div>
+
+      <!-- Status Panel -->
+      <div id="statusPanel">
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="font-size:3rem;margin-bottom:12px">🔐</div>
+          <h2 style="color:var(--text-bright);margin-bottom:8px">Two-Factor Authentication</h2>
+          <p class="info-text">Add an extra layer of security to your account with Authenticator App.</p>
+          <div style="margin-top:12px">
+            <span class="status-badge" id="statusBadge">Loading...</span>
+          </div>
+        </div>
+
+        <div id="enableSection" class="hidden">
+          <p class="info-text">When 2FA is enabled, you'll need to enter a code from your authenticator app when signing in or resetting your password.</p>
+          <button class="submit-btn" onclick="startSetup()">Enable 2FA</button>
+        </div>
+
+        <div id="disableSection" class="hidden">
+          <p class="info-text" style="color:var(--danger)">⚠️ Disabling 2FA will make your account less secure. You'll need your password and a 2FA code to disable it.</p>
+          <button class="submit-btn danger" onclick="showDisableForm()">Disable 2FA</button>
+        </div>
+
+        <a href="/app" class="back-btn">Back to Files</a>
+      </div>
+
+      <!-- Setup Panel -->
+      <div id="setupPanel" class="hidden">
+        <div style="text-align:center;margin-bottom:20px">
+          <h3 style="color:var(--text-bright);margin-bottom:8px">Setup Authenticator App</h3>
+          <p class="info-text">Follow these steps to enable 2FA on your account.</p>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <p style="color:var(--text);font-size:0.9rem;margin-bottom:12px"><span class="step-num">1</span> Install Authenticator App on your phone</p>
+          <p style="color:var(--text);font-size:0.9rem;margin-bottom:12px"><span class="step-num">2</span> Scan this QR code with the app</p>
+        </div>
+
+        <div class="qr-container" id="qrContainer">
+          <div style="color:var(--text-dim)">Generating QR code...</div>
+        </div>
+
+        <div class="secret-box hidden" id="secretBox">
+          <div style="color:var(--text-dim);font-size:0.75rem;margin-bottom:6px">Or enter this code manually:</div>
+          <div class="secret-code" id="secretCode"></div>
+        </div>
+
+        <div style="margin-top:20px">
+          <p style="color:var(--text);font-size:0.9rem;margin-bottom:12px"><span class="step-num">3</span> Enter the 6-digit code from the app</p>
+        </div>
+
+        <form onsubmit="handleVerify(event)">
+          <div class="form-group">
+            <input type="text" class="form-input" id="verifyCode" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="text-align:center;font-size:1.5rem;letter-spacing:8px">
+          </div>
+          <button type="submit" class="submit-btn" id="verifyBtn">Verify & Enable</button>
+        </form>
+        <button class="back-btn" onclick="cancelSetup()">Cancel</button>
+      </div>
+
+      <!-- Disable Panel -->
+      <div id="disablePanel" class="hidden">
+        <div style="text-align:center;margin-bottom:20px">
+          <h3 style="color:var(--text-bright);margin-bottom:8px">Disable 2FA</h3>
+          <p class="info-text">Enter your password and 2FA code to disable two-factor authentication.</p>
+        </div>
+
+        <form onsubmit="handleDisable(event)">
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="password-toggle">
+              <input type="password" class="form-input" id="disablePassword" placeholder="Enter your password" required autocomplete="current-password">
+              <button type="button" class="toggle-eye" onclick="togglePassword('disablePassword', this)">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">2FA Code</label>
+            <input type="text" class="form-input" id="disableCode" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="text-align:center;font-size:1.3rem;letter-spacing:6px">
+          </div>
+          <button type="submit" class="submit-btn danger" id="disableBtn">Disable 2FA</button>
+        </form>
+        <button class="back-btn" onclick="showStatusPanel()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let authToken = localStorage.getItem('token');
+    let userTOTPEnabled = false;
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' };
+    }
+
+    async function checkAuth() {
+      if (!authToken) { window.location.href = '/login'; return; }
+      try {
+        const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        const data = await res.json();
+        if (!data.success) { window.location.href = '/login'; return; }
+      } catch (err) { window.location.href = '/login'; }
+    }
+
+    function showError(msg) {
+      const error = document.getElementById('errorMsg');
+      error.textContent = msg;
+      error.classList.add('show');
+      document.getElementById('successMsg').classList.remove('show');
+    }
+
+    function showSuccess(msg) {
+      const success = document.getElementById('successMsg');
+      success.textContent = msg;
+      success.classList.add('show');
+      document.getElementById('errorMsg').classList.remove('show');
+    }
+
+    function hideMessages() {
+      document.getElementById('errorMsg').classList.remove('show');
+      document.getElementById('successMsg').classList.remove('show');
+    }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') { input.type = 'text'; btn.textContent = '🔒'; }
+      else { input.type = 'password'; btn.textContent = '👁'; }
+    }
+
+    function showPanel(panelId) {
+      ['statusPanel', 'setupPanel', 'disablePanel'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(panelId).classList.remove('hidden');
+    }
+
+    function showStatusPanel() { showPanel('statusPanel'); loadStatus(); }
+
+    async function loadStatus() {
+      try {
+        const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        const data = await res.json();
+        if (data.success) {
+          userTOTPEnabled = data.user.totpEnabled;
+          const badge = document.getElementById('statusBadge');
+          const enableSection = document.getElementById('enableSection');
+          const disableSection = document.getElementById('disableSection');
+
+          if (data.user.totpEnabled) {
+            badge.textContent = '2FA Enabled';
+            badge.className = 'status-badge status-enabled';
+            enableSection.classList.add('hidden');
+            disableSection.classList.remove('hidden');
+          } else {
+            badge.textContent = '2FA Disabled';
+            badge.className = 'status-badge status-disabled';
+            enableSection.classList.remove('hidden');
+            disableSection.classList.add('hidden');
+          }
+        }
+      } catch (err) {}
+    }
+
+    async function startSetup() {
+      hideMessages();
+      showPanel('setupPanel');
+
+      try {
+        const res = await fetch('/api/2fa/setup', {
+          method: 'POST',
+          headers: authHeaders()
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          const qrContainer = document.getElementById('qrContainer');
+          qrContainer.innerHTML = `<img src="${data.qrCode}" alt="QR Code">`;
+          
+          document.getElementById('secretCode').textContent = data.secret;
+          document.getElementById('secretBox').classList.remove('hidden');
+        } else {
+          showError(data.error || 'Failed to setup 2FA');
+          showStatusPanel();
+        }
+      } catch (err) {
+        showError('Connection error');
+        showStatusPanel();
+      }
+    }
+
+    function cancelSetup() { showStatusPanel(); }
+
+    async function handleVerify(e) {
+      e.preventDefault();
+      hideMessages();
+      const btn = document.getElementById('verifyBtn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+
+      try {
+        const res = await fetch('/api/2fa/verify', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ token: document.getElementById('verifyCode').value })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showSuccess('2FA enabled successfully!');
+          setTimeout(() => showStatusPanel(), 1500);
+        } else {
+          showError(data.error || 'Invalid code');
+        }
+      } catch (err) {
+        showError('Connection error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Verify & Enable';
+    }
+
+    function showDisableForm() { showPanel('disablePanel'); }
+
+    async function handleDisable(e) {
+      e.preventDefault();
+      hideMessages();
+      const btn = document.getElementById('disableBtn');
+      btn.disabled = true;
+      btn.textContent = 'Disabling...';
+
+      try {
+        const res = await fetch('/api/2fa/disable', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            password: document.getElementById('disablePassword').value,
+            token: document.getElementById('disableCode').value
+          })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showSuccess('2FA disabled successfully!');
+          setTimeout(() => showStatusPanel(), 1500);
+        } else {
+          showError(data.error || 'Failed to disable 2FA');
+        }
+      } catch (err) {
+        showError('Connection error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Disable 2FA';
+    }
+
+    checkAuth().then(() => loadStatus());
+  </script>
+  <div class="creator-credit" style="text-align: center; margin-top: 40px; padding-bottom: 20px; color: var(--text-dim); font-size: 0.9rem; font-weight: 500; opacity: 0.8; width: 100%;">Created by Abdullah</div>
+</body>
+</html>
