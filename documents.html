@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abdullah Drive — Full Docs & Sheets Workspace</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0a0a0f;
+      --surface:#12121a;
+      --surface2:#1a1a28;
+      --border:#2a2a3a;
+      --primary:#6c5ce7;
+      --primary-glow:rgba(108,92,231,0.3);
+      --primary-light:#a29bfe;
+      --sheet-accent:#00cec9;
+      --sheet-glow:rgba(0,206,201,0.3);
+      --folder-accent:#fdcb6e;
+      --danger:#ff6b6b;
+      --success:#00cec9;
+      --warning:#fdcb6e;
+      --text:#e2e2f0;
+      --text-dim:#8888a0;
+      --text-bright:#ffffff;
+      --radius:12px;
+      --radius-sm:8px;
+      --shadow:0 8px 32px rgba(0,0,0,0.4);
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;position:relative}
+
+    /* Background Glow */
+    .bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px, rgba(108,92,231,0.05) 1px, transparent 0);background-size:40px 40px;pointer-events:none;z-index:0}
+    .bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle, rgba(108,92,231,0.1) 0%, transparent 70%);pointer-events:none;z-index:0}
+
+    /* Top Bar */
+    .top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+    .brand-group{display:flex;align-items:center;gap:14px}
+    .drive-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff}
+    .brand-title{font-size:1.35rem;font-weight:700;color:var(--text-bright);letter-spacing:-0.5px}
+    .brand-badge{font-size:0.75rem;font-weight:600;padding:2px 8px;background:rgba(108,92,231,0.15);border-radius:12px;color:var(--primary-light);text-transform:uppercase;margin-left:6px;border:1px solid rgba(108,92,231,0.3)}
+
+    .search-wrap{flex:1;max-width:540px;margin:0 24px;position:relative}
+    .search-input{width:100%;padding:11px 18px 11px 44px;background:var(--surface2);border:1px solid var(--border);border-radius:24px;color:var(--text);font-size:0.92rem;outline:none;transition:all 0.3s;font-family:inherit}
+    .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+    .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:1rem;color:var(--text-dim)}
+
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .nav-btn{padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);text-decoration:none;font-size:0.85rem;font-weight:500;transition:all 0.3s;display:flex;align-items:center;gap:6px}
+    .nav-btn:hover{border-color:var(--primary);color:var(--primary-light);background:rgba(108,92,231,0.1)}
+    .nav-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 2px 12px var(--primary-glow)}
+
+    .user-pill{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:24px;padding:4px 14px 4px 6px}
+    .user-avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:#fff}
+    .user-name{font-size:0.85rem;font-weight:600;color:var(--text-dim)}
+    .logout-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.95rem;padding:4px 6px;border-radius:6px;transition:all 0.2s}
+    .logout-btn:hover{background:rgba(255,107,107,0.15)}
+
+    /* App Layout */
+    .app-layout{display:flex;flex:1;position:relative;z-index:1}
+
+    /* Animated Button Effects */
+    button, .btn-create, .btn-create-sheet, .btn-create-folder, .nav-btn, .view-btn, .btn-icon-act, .bar-btn, .card-actions-bar button {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-create::after, .btn-create-sheet::after, .btn-act-primary::after, .btn-modal-confirm::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 50%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+      transform: rotate(25deg);
+      animation: btnLightRay 3.5s infinite ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes btnLightRay {
+      0% { left: -60%; opacity: 0; }
+      20% { opacity: 1; }
+      60% { left: 140%; opacity: 0; }
+      100% { left: 140%; opacity: 0; }
+    }
+    button:active, .btn-create:active, .btn-create-sheet:active, .nav-btn:active { transform: scale(0.96) !important; }
+
+    /* Left Sidebar */
+    .sidebar{width:260px;background:var(--surface);border-right:1px solid var(--border);padding:20px 18px;display:flex;flex-direction:column;gap:16px;flex-shrink:0}
+    
+    .btn-group-create{display:flex;flex-direction:column;gap:8px}
+    .btn-create{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:600;cursor:pointer;box-shadow:0 4px 16px var(--primary-glow)}
+    .btn-create:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 25px var(--primary-glow)}
+
+    .btn-create-sheet{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;background:linear-gradient(135deg,var(--sheet-accent),#00b894);color:#000;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:700;cursor:pointer;box-shadow:0 4px 16px var(--sheet-glow)}
+    .btn-create-sheet:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 25px var(--sheet-glow)}
+
+    .btn-create-folder{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:10px 16px;background:var(--surface2);border:1px dashed var(--folder-accent);color:var(--folder-accent);border-radius:var(--radius-sm);font-size:0.88rem;font-weight:600;cursor:pointer}
+    .btn-create-folder:hover{background:rgba(253,203,110,0.15)}
+
+    .menu-list{display:flex;flex-direction:column;gap:4px;list-style:none}
+    .menu-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-sm);color:var(--text-dim);font-size:0.88rem;font-weight:500;cursor:pointer;transition:all 0.25s;text-decoration:none;border:1px solid transparent}
+    .menu-item:hover{background:var(--surface2);color:var(--text);border-color:var(--border)}
+    .menu-item.active{background:rgba(108,92,231,0.15);color:var(--primary-light);border-color:rgba(108,92,231,0.3);font-weight:600}
+    .menu-item .icon{font-size:1.1rem}
+    .badge-count{margin-left:auto;background:var(--surface2);padding:2px 8px;border-radius:12px;font-size:0.75rem;color:var(--text-dim)}
+    .menu-item.active .badge-count{background:var(--primary);color:#fff}
+
+    .storage-card{margin-top:auto;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px}
+    .storage-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:0.85rem;font-weight:600;color:var(--text)}
+    .progress-track{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin:10px 0}
+    .progress-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--sheet-accent));width:0%;transition:width 0.4s ease}
+    .storage-sub{font-size:0.78rem;color:var(--text-dim)}
+
+    /* Main Workspace */
+    .workspace{flex:1;padding:28px 32px;overflow-y:auto;display:flex;flex-direction:column}
+
+    /* Folders Grid Bar */
+    .folders-section{margin-bottom:28px}
+    .folders-title{font-size:0.95rem;font-weight:700;color:var(--text-bright);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .folders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+    .folder-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.3s;position:relative}
+    .folder-card:hover{border-color:var(--folder-accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+    .folder-card.active-folder{border-color:var(--folder-accent);background:rgba(253,203,110,0.12)}
+    .folder-icon{font-size:1.5rem}
+    .folder-name{font-size:0.9rem;font-weight:600;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+    
+    /* Breadcrumb Trail */
+    .breadcrumb-trail{display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--text-dim);margin-bottom:20px}
+    .breadcrumb-item{cursor:pointer;transition:all 0.2s;font-weight:500}
+    .breadcrumb-item:hover{color:var(--primary-light)}
+    .breadcrumb-item.active{color:var(--text-bright);font-weight:700}
+
+    .toolbar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+    .header-left{display:flex;align-items:center;gap:14px}
+    .title-view{font-size:1.6rem;font-weight:700;color:var(--text-bright)}
+    .counter-pill{font-size:0.82rem;font-weight:600;color:var(--primary-light);background:rgba(108,92,231,0.12);padding:4px 12px;border-radius:16px;border:1px solid rgba(108,92,231,0.25)}
+
+    .toolbar-right{display:flex;align-items:center;gap:12px}
+    .select-custom{padding:9px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.88rem;font-weight:500;outline:none;cursor:pointer;font-family:inherit}
+    .select-custom:focus{border-color:var(--primary)}
+
+    .view-switcher{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px}
+    .view-btn{padding:7px 14px;border:none;background:none;color:var(--text-dim);cursor:pointer;border-radius:6px;font-size:0.85rem;font-weight:500;transition:all 0.2s;font-family:inherit}
+    .view-btn.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px var(--primary-glow)}
+
+    .btn-icon-act{padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-size:0.9rem;transition:all 0.2s}
+    .btn-icon-act:hover{border-color:var(--primary);color:var(--primary-light)}
+
+    /* Grid Layout */
+    .docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+    
+    .card-doc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all 0.3s;cursor:pointer;position:relative;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+    .card-doc:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:0 8px 24px rgba(108,92,231,0.25)}
+    .card-doc.sheet-card:hover{border-color:var(--sheet-accent);box-shadow:0 8px 24px var(--sheet-glow)}
+    
+    .card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+    .icon-doc-box{width:44px;height:44px;border-radius:10px;background:rgba(108,92,231,0.12);color:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:1px solid rgba(108,92,231,0.25)}
+    .icon-doc-box.sheet-icon-box{background:rgba(0,206,201,0.12);color:var(--sheet-accent);border-color:rgba(0,206,201,0.3)}
+
+    .doc-type-tag{font-size:0.68rem;font-weight:700;padding:2px 6px;border-radius:6px;text-transform:uppercase;margin-left:8px}
+    .doc-type-tag.doc{background:rgba(108,92,231,0.2);color:var(--primary-light)}
+    .doc-type-tag.sheet{background:rgba(0,206,201,0.2);color:var(--sheet-accent)}
+    
+    .star-icon-btn{background:none;border:none;font-size:1.3rem;color:var(--text-dim);cursor:pointer;padding:2px;transition:all 0.2s}
+    .star-icon-btn:hover{transform:scale(1.2)}
+    .star-icon-btn.active{color:var(--warning)}
+
+    .card-doc-title{font-size:1.05rem;font-weight:600;color:var(--text-bright);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center}
+    .card-doc-snippet{color:var(--text-dim);font-size:0.85rem;line-height:1.5;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;height:58px;word-break:break-word;background:var(--surface2);padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,0.03)}
+
+    .card-doc-info{display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;color:var(--text-dim);margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
+    
+    .card-actions-bar{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+    .card-actions-bar button{flex:1;padding:8px 10px;border:none;border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit}
+    .btn-act-primary{background:var(--primary);color:#fff;box-shadow:0 2px 8px var(--primary-glow)}
+    .btn-act-primary:hover{background:var(--primary-light)}
+    .btn-act-sheet{background:var(--sheet-accent);color:#000;box-shadow:0 2px 8px var(--sheet-glow);font-weight:700}
+    .btn-act-sheet:hover{background:#55efc4}
+    .btn-act-email{background:rgba(0,206,201,0.15);color:var(--success);border:1px solid rgba(0,206,201,0.3) !important}
+    .btn-act-email:hover{background:var(--success);color:#000}
+    .btn-act-sub{background:var(--surface2);color:var(--text);border:1px solid var(--border) !important}
+    .btn-act-sub:hover{border-color:var(--text-bright) !important;color:var(--text-bright)}
+
+    /* Table View */
+    .table-container{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+    .table-docs{width:100%;border-collapse:collapse;text-align:left}
+    .table-docs th{background:var(--surface2);padding:14px 20px;font-size:0.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);font-weight:600}
+    .table-docs td{padding:14px 20px;border-bottom:1px solid var(--border);font-size:0.9rem}
+    .table-docs tr:last-child td{border-bottom:none}
+    .table-docs tr:hover td{background:rgba(108,92,231,0.04);cursor:pointer}
+
+    /* Empty State */
+    .empty-box{text-align:center;padding:80px 20px;color:var(--text-dim);margin:0 auto}
+    .empty-symbol{font-size:4rem;margin-bottom:16px;display:block;opacity:0.7}
+    .empty-title{font-size:1.2rem;font-weight:600;color:var(--text-bright);margin-bottom:16px}
+
+    /* Fullscreen Word Docs Editor Overlay */
+    .editor-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:1000;display:none;flex-direction:column;animation:fadeIn 0.3s ease}
+    .editor-modal.active{display:flex}
+
+    .editor-header{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:var(--surface);border-bottom:1px solid var(--border)}
+    .doc-meta-header{display:flex;align-items:center;gap:14px;flex:1}
+    .btn-editor-back{background:none;border:none;color:var(--text-dim);font-size:1.3rem;cursor:pointer;padding:4px 8px;border-radius:8px;transition:all 0.2s}
+    .btn-editor-back:hover{background:var(--surface2);color:var(--text-bright)}
+    
+    .editor-title-field{background:transparent;border:none;color:var(--text-bright);font-size:1.2rem;font-weight:700;outline:none;padding:6px 10px;border-radius:6px;transition:all 0.2s;max-width:380px;font-family:inherit}
+    .editor-title-field:hover,.editor-title-field:focus{background:var(--surface2)}
+
+    .save-indicator{font-size:0.8rem;font-weight:500;color:var(--text-dim);display:flex;align-items:center;gap:6px}
+    .save-indicator.active{color:var(--warning)}
+
+    .editor-actions-top{display:flex;align-items:center;gap:10px}
+
+    /* Formatting Toolbar */
+    .editor-bar{display:flex;align-items:center;gap:6px;padding:10px 28px;background:var(--surface2);border-bottom:1px solid var(--border);overflow-x:auto}
+    .bar-section{display:flex;align-items:center;gap:4px;padding:0 8px;border-right:1px solid var(--border)}
+    .bar-section:last-child{border-right:none}
+    
+    .bar-btn{padding:6px 12px;background:none;border:none;color:var(--text-dim);border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600;transition:all 0.2s;display:flex;align-items:center;justify-content:center;min-width:32px;height:32px;font-family:inherit}
+    .bar-btn:hover{background:var(--surface);color:var(--text-bright)}
+    .bar-btn.active{background:var(--primary);color:#fff}
+    .bar-select{padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;font-family:inherit}
+    .bar-select:focus{border-color:var(--primary)}
+
+    /* Paper Canvas */
+    .editor-body-scroll{flex:1;overflow-y:auto;padding:36px 20px;display:flex;justify-content:center;background:var(--bg)}
+    .paper-sheet{width:100%;max-width:840px;min-height:900px;background:#12121c;border:1px solid var(--border);border-radius:12px;padding:50px;box-shadow:var(--shadow);color:var(--text-bright);outline:none;font-size:1.05rem;line-height:1.8;font-family:inherit}
+    .paper-sheet:focus{border-color:var(--primary);box-shadow:0 0 20px rgba(108,92,231,0.2)}
+
+    .editor-status-bar{padding:10px 28px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;color:var(--text-dim);font-size:0.8rem}
+    .status-group{display:flex;gap:20px}
+
+    /* ---------------- SPREADSHEET (SHEETS) EDITOR OVERLAY ---------------- */
+    .sheet-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:1050;display:none;flex-direction:column;animation:fadeIn 0.3s ease}
+    .sheet-modal.active{display:flex}
+
+    .sheet-bar{display:flex;align-items:center;gap:12px;padding:8px 24px;background:#151522;border-bottom:1px solid var(--border);overflow-x:auto}
+    .sheet-formula-wrap{display:flex;align-items:center;gap:10px;padding:6px 24px;background:var(--surface);border-bottom:1px solid var(--border)}
+    .cell-id-badge{font-size:0.85rem;font-weight:700;color:var(--sheet-accent);background:rgba(0,206,201,0.15);padding:4px 10px;border-radius:6px;min-width:55px;text-align:center;border:1px solid rgba(0,206,201,0.3);font-family:monospace}
+    .formula-prefix{color:var(--text-dim);font-weight:700;font-family:monospace}
+    .formula-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--text-bright);font-size:0.9rem;outline:none;font-family:monospace}
+    .formula-input:focus{border-color:var(--sheet-accent)}
+
+    /* Sheet Tabs Bar (Sheets Style) */
+    .sheet-tabs-bar{display:flex;align-items:center;gap:4px;padding:4px 24px;background:#11111a;border-top:1px solid var(--border);overflow-x:auto}
+    .sheet-tab-item{padding:6px 16px;background:var(--surface2);border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;font-size:0.82rem;font-weight:600;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:8px}
+    .sheet-tab-item.active-tab{background:var(--surface);color:var(--sheet-accent);border-color:var(--sheet-accent)}    .sheet-grid-container{flex:1;overflow:auto;position:relative;background:#0d0d14}
+    .sheet-grid-table{border-collapse:collapse;table-layout:fixed;width:max-content;font-family:-apple-system,BlinkMaxSystemFont,'Segoe UI',Roboto,sans-serif}
+    
+    .sheet-grid-table th{background:#181826;color:var(--text-dim);font-size:0.78rem;font-weight:700;padding:6px;border:1px solid #28283a;text-align:center;user-select:none;position:sticky;top:0;z-index:10;width:120px;min-width:120px;max-width:120px;box-sizing:border-box}
+    .sheet-grid-table th.col-corner{left:0;z-index:20;width:45px;min-width:45px;max-width:45px;background:#141420}
+    .sheet-grid-table td.row-num{background:#181826;color:var(--text-dim);font-size:0.75rem;font-weight:700;text-align:center;border:1px solid #28283a;position:sticky;left:0;z-index:9;user-select:none;width:45px;min-width:45px;max-width:45px;box-sizing:border-box}
+    
+    .sheet-cell{width:120px;min-width:120px;max-width:120px;height:32px;box-sizing:border-box;background:#10101a;border:1px solid #242436;color:var(--text);font-size:0.88rem;padding:4px 8px;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.15s;word-break:break-all}
+    .sheet-cell:focus,.sheet-cell.active-cell{border:2px solid var(--sheet-accent) !important;background:#1a1a2b;z-index:5;color:#fff}
+    .sheet-cell[contenteditable="true"]{max-width:120px !important;overflow:hidden !important;white-space:nowrap !important;text-overflow:clip !important}
+
+    /* Drive Context Menu */
+    .card-doc{position:relative;overflow:visible !important}
+    .menu-dots-btn{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-size:1.1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:15;transition:all 0.2s}
+    .menu-dots-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);transform:scale(1.05)}
+    
+    .card-context-menu{position:absolute;top:48px;right:12px;background:rgba(20,20,34,0.98);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.18);border-radius:var(--radius-sm);padding:6px;box-shadow:0 12px 36px rgba(0,0,0,0.8);z-index:9999;min-width:175px;display:none;flex-direction:column;gap:3px;animation:fadeIn 0.15s ease}
+    .card-context-menu.active{display:flex}
+    .menu-item-act{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:0.86rem;font-weight:500;color:var(--text-bright);border-radius:6px;cursor:pointer;transition:background 0.15s}
+    .menu-item-act:hover{background:rgba(108,92,231,0.25);color:var(--primary-light)}
+    .menu-item-act.danger:hover{background:rgba(255,107,107,0.25);color:var(--danger)}
+    .menu-item-act .icon{font-size:0.95rem}
+
+    /* Modals */
+    .modal-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:2000;display:none;align-items:center;justify-content:center;animation:fadeIn 0.25s ease}
+    .modal-backdrop.active{display:flex}
+    .modal-content{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:30px;max-width:480px;width:90%;box-shadow:var(--shadow);animation:slideUp 0.3s ease}
+    .modal-content h3{color:var(--text-bright);margin-bottom:10px;font-size:1.2rem;font-weight:700}
+    .modal-content p{color:var(--text-dim);font-size:0.88rem;margin-bottom:20px;line-height:1.5}
+
+    .modal-field{width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.95rem;outline:none;transition:all 0.3s;margin-bottom:20px;font-family:inherit}
+    .modal-field:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+
+    .modal-actions{display:flex;gap:10px}
+    .modal-actions button{flex:1;padding:11px;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.3s;font-family:inherit}
+    .btn-modal-cancel{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+    .btn-modal-cancel:hover{border-color:var(--primary);color:var(--primary-light)}
+    .btn-modal-confirm{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff}
+    .btn-modal-confirm:hover{transform:translateY(-1px);box-shadow:0 4px 15px var(--primary-glow)}
+    .btn-modal-danger{background:rgba(255,107,107,0.2);border:1px solid rgba(255,107,107,0.4);color:var(--danger)}
+    .btn-modal-danger:hover{background:var(--danger);color:#fff}
+
+    /* Version History List */
+    .version-item{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px}
+    .version-info{font-size:0.85rem;color:var(--text)}
+
+    /* Toast Notification */
+    .toast-popup{position:fixed;bottom:28px;right:28px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 24px;color:var(--text-bright);font-size:0.88rem;font-weight:600;z-index:3000;animation:slideIn 0.3s ease;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
+    .toast-popup.success{border-color:var(--success);color:var(--success)}
+    .toast-popup.error{border-color:var(--danger);color:var(--danger)}
+
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+    @media(max-width:900px){.sidebar{width:220px}.search-wrap{margin:0 12px}}
+    @media(max-width:768px){
+      .top-bar{flex-direction:column;gap:12px;padding:12px 14px;align-items:stretch}
+      .brand-group{justify-content:center}
+      .search-wrap{margin:0;width:100%}
+      .top-actions{justify-content:center;flex-wrap:wrap;gap:8px}
+      .app-layout{flex-direction:column}
+      .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:16px}
+      .docs-grid{grid-template-columns:1fr;gap:12px}
+      .modal-content{padding:20px;max-width:95%}
+      .editor-toolbar{overflow-x:auto;padding:8px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Elements -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="brand-group">
+      <div class="drive-icon">📊</div>
+      <div>
+        <span class="brand-title">Abdullah Drive</span>
+        <span class="brand-badge">Full Workspace</span>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search docs, sheets & folders..." oninput="debounceSearch()">
+    </div>
+
+    <div class="top-actions">
+      <a href="/app" class="nav-btn">📁 Files</a>
+      <a href="/documents?filter=docsOnly" class="nav-btn" id="navDocsBtn">📄 Docs</a>
+      <a href="/documents?filter=sheetsOnly" class="nav-btn" id="navSheetsBtn">📊 Sheets</a>
+      <a href="/settings" class="nav-btn">⚙️ Settings</a>
+      <a href="/admin" class="nav-btn" id="adminBtn" style="display:none">👑 Admin</a>
+      <div id="authNavGroup" style="display:flex;align-items:center;gap:8px">
+        <a href="/login" class="nav-btn" style="background:rgba(108,92,231,0.15);border-color:var(--primary);color:var(--primary-light)">Sign In</a>
+        <a href="/login?tab=register" class="nav-btn" style="background:var(--primary);border-color:var(--primary);color:#fff">Sign Up</a>
+      </div>
+      <div class="user-pill" id="userPill" style="display:none">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <span class="user-name" id="userName">User</span>
+        <button class="logout-btn" onclick="openModal('logoutModal')" title="Sign Out">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Layout -->
+  <div class="app-layout">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <!-- DOCS SECTION -->
+      <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08)">
+        <div style="font-size:0.75rem;font-weight:800;color:var(--primary-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">📄 DOCS</div>
+        <button class="btn-create" onclick="createNewDoc('doc')" style="width:100%;margin-bottom:6px">
+          <span style="font-size:1.1rem">📄</span> + New Document
+        </button>
+        <button onclick="createNewDocWithTemplate('doc', 'meeting_notes')" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:7px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;cursor:pointer;margin-bottom:6px">
+          <span>🎨</span> Meeting Notes Template
+        </button>
+        <button onclick="document.getElementById('importDocInput').click()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:8px 12px;background:rgba(108,92,231,0.12);border:1px dashed var(--primary-light);color:var(--primary-light);border-radius:var(--radius-sm);font-size:0.82rem;font-weight:600;cursor:pointer">
+          <span>📤</span> Upload Doc (.html/.txt/.md)
+        </button>
+      </div>
+
+      <!-- SHEETS SECTION -->
+      <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08)">
+        <div style="font-size:0.75rem;font-weight:800;color:var(--sheet-accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">📊 SHEETS</div>
+        <button class="btn-create-sheet" onclick="createNewDoc('sheet')" style="width:100%;margin-bottom:6px">
+          <span style="font-size:1.1rem">📊</span> + New Sheet
+        </button>
+        <button onclick="createNewDocWithTemplate('sheet', 'budget_sheet')" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:7px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;cursor:pointer;margin-bottom:6px">
+          <span>🎨</span> Budget Sheet Template
+        </button>
+        <button onclick="document.getElementById('importSheetInput').click()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:8px 12px;background:rgba(0,184,148,0.12);border:1px dashed var(--sheet-accent);color:var(--sheet-accent);border-radius:var(--radius-sm);font-size:0.82rem;font-weight:600;cursor:pointer">
+          <span>📤</span> Upload Sheet (.xlsx/.csv)
+        </button>
+      </div>
+
+      <input type="file" id="importDocInput" accept=".html,.txt,.md,.htm" style="display:none" onchange="handleDocImport(event)">
+      <input type="file" id="importSheetInput" accept=".xlsx,.xls,.csv,.tsv,.ods" style="display:none" onchange="handleSheetImport(event)">
+
+      <div style="font-size:0.75rem;font-weight:800;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">NAVIGATE WORKSPACE</div>
+      <ul class="menu-list">
+        <li class="menu-item active" id="tabDocsOnly" onclick="switchFilter('docsOnly')">
+          <span class="icon">📄</span> Docs
+          <span class="badge-count" id="countDocsOnly">0</span>
+        </li>
+        <li class="menu-item" id="tabSheetsOnly" onclick="switchFilter('sheetsOnly')">
+          <span class="icon">📊</span> Sheets
+          <span class="badge-count" id="countSheetsOnly">0</span>
+        </li>
+        <li class="menu-item" id="tabMyDocs" onclick="switchFilter('myDocs')">
+          <span class="icon">📁</span> All Items
+          <span class="badge-count" id="countMyDocs">0</span>
+        </li>
+        <li class="menu-item" id="tabStarred" onclick="switchFilter('starred')">
+          <span class="icon">⭐</span> Starred Items
+          <span class="badge-count" id="countStarred">0</span>
+        </li>
+        <li class="menu-item" id="tabSharedWithMe" onclick="switchFilter('sharedWithMe')">
+          <span class="icon">👥</span> Shared with Me
+          <span class="badge-count" id="countSharedWithMe">0</span>
+        </li>
+        <li class="menu-item" id="tabTrash" onclick="switchFilter('trash')">
+          <span class="icon">🗑️</span> Trash Bin
+          <span class="badge-count" id="countTrash">0</span>
+        </li>
+      </ul>
+
+      <div class="storage-card">
+        <div class="storage-header">
+          <span>Drive Capacity</span>
+          <span id="storagePercent" style="color:var(--sheet-accent)">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-bar" id="storageBar"></div></div>
+        <div class="storage-sub" id="storageText">0 files stored</div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+      <div class="toolbar-header">
+        <div class="header-left">
+          <h2 class="title-view" id="viewTitle">All Workspace Items</h2>
+          <span class="counter-pill" id="docCount">0 items</span>
+        </div>
+
+        <div class="toolbar-right">
+          <select class="select-custom" id="sortSelect" onchange="sortDocs()">
+            <option value="updatedDesc">Date Modified (Newest)</option>
+            <option value="updatedAsc">Date Modified (Oldest)</option>
+            <option value="titleAsc">Title (A-Z)</option>
+          </select>
+
+          <div class="view-switcher">
+            <button class="view-btn active" id="btnGridView" onclick="setMode('grid')" title="Grid View">Grid</button>
+            <button class="view-btn" id="btnListView" onclick="setMode('list')" title="List View">List</button>
+          </div>
+
+          <button class="btn-icon-act" onclick="loadDocuments()" title="Refresh Workspace">🔄</button>
+        </div>
+      </div>
+
+      <!-- Grid View -->
+      <div class="docs-grid" id="docsGrid"></div>
+
+      <!-- List View Table -->
+      <div class="table-container" id="docsTableWrap" style="display:none">
+        <table class="table-docs">
+          <thead>
+            <tr>
+              <th>Type & Title</th>
+              <th>Starred</th>
+              <th>Last Modified</th>
+              <th>Details</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="docsTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-box" id="emptyState" style="display:none">
+        <span class="empty-symbol" id="emptyIcon">📃</span>
+        <div class="empty-title" id="emptyText">No items found. Create your first document or spreadsheet!</div>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button class="btn-create" onclick="createNewDoc('doc')" style="width:auto;padding:10px 20px">
+            + New Document
+          </button>
+          <button class="btn-create-sheet" onclick="createNewDoc('sheet')" style="width:auto;padding:10px 20px">
+            + New Sheet
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Fullscreen Word Docs Editor -->
+  <div class="editor-modal" id="editorOverlay">
+    <div class="editor-header">
+      <div class="doc-meta-header">
+        <button class="btn-editor-back" onclick="closeEditor()" title="Back to Workspace">←</button>
+        <span style="font-size:1.4rem">📄</span>
+        <input type="text" class="editor-title-field" id="editorTitle" placeholder="Untitled Document" oninput="triggerAutoSave()">
+        <button class="star-icon-btn" id="editorStarBtn" onclick="toggleCurrentStar()" title="Star document">★</button>
+        <div class="save-indicator" id="editorSaveStatus">
+          <span>✓</span> <span id="editorSaveText">Saved to Drive</span>
+        </div>
+      </div>
+
+      <div class="editor-actions-top">
+        <button class="nav-btn" onclick="openVersionHistoryModal(currentDocId)">Version History</button>
+        <button class="nav-btn" onclick="openEmailModal(currentDocId)">Email Share</button>
+        <button class="nav-btn" onclick="openExportModal(currentDocId)">Export</button>
+        <button class="btn-create" onclick="saveDocument(); showToast('Saved to Drive!','success')" style="padding:8px 18px;font-size:0.88rem">Save</button>
+        <button class="nav-btn" onclick="closeEditor()">Close</button>
+      </div>
+    </div>
+
+    <!-- Formatting Toolbar -->
+    <div class="editor-bar">
+      <div class="bar-section">
+        <button class="bar-btn" onclick="execCmd('undo')" title="Undo">↶</button>
+        <button class="bar-btn" onclick="execCmd('redo')" title="Redo">↷</button>
+      </div>
+
+      <div class="bar-section">
+        <select class="bar-select" onmousedown="saveDocSelection()" onchange="applyDocFormatBlock(this.value); this.selectedIndex=0" title="Paragraph Style">
+          <option value="">Style</option>
+          <option value="p">Normal Text</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+          <option value="blockquote">Quote</option>
+          <option value="pre">Code Block</option>
+        </select>
+        <select class="bar-select" onmousedown="saveDocSelection()" onchange="applyDocFontName(this.value); this.selectedIndex=0" title="Font Family">
+          <option value="">Font Family</option>
+          <option value="Outfit">Outfit</option>
+          <option value="Arial">Arial</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Impact">Impact</option>
+        </select>
+        <select class="bar-select" onmousedown="saveDocSelection()" onchange="applyDocFontSize(this.value); this.selectedIndex=0" title="Font Size">
+          <option value="">Font Size</option>
+          <option value="1">Tiny (10px)</option>
+          <option value="2">Small (12px)</option>
+          <option value="3">Normal (14px)</option>
+          <option value="4">Medium (16px)</option>
+          <option value="5">Large (18px)</option>
+          <option value="6">Huge (24px)</option>
+          <option value="7">Giant (36px)</option>
+        </select>
+      </div>
+
+      <div class="bar-section">
+        <button class="bar-btn" onclick="execCmd('bold')" title="Bold"><b>B</b></button>
+        <button class="bar-btn" onclick="execCmd('italic')" title="Italic"><i>I</i></button>
+        <button class="bar-btn" onclick="execCmd('underline')" title="Underline"><u>U</u></button>
+        <button class="bar-btn" onclick="execCmd('strikeThrough')" title="Strikethrough"><s>S</s></button>
+        <button class="bar-btn" onclick="execCmd('superscript')" title="Superscript">x²</button>
+        <button class="bar-btn" onclick="execCmd('subscript')" title="Subscript">x₂</button>
+      </div>
+
+      <div class="bar-section">
+        <label style="font-size:0.75rem;color:var(--text-dim);margin-right:4px">Text:</label>
+        <input type="color" id="docTextColorPicker" value="#e2e2f0" onmousedown="saveDocSelection()" oninput="applyDocTextColor(this.value)" style="width:24px;height:24px;border:none;cursor:pointer;background:none">
+        
+        <label style="font-size:0.75rem;color:var(--text-dim);margin-left:8px;margin-right:4px">Highlight:</label>
+        <input type="color" id="docBgColorPicker" value="#ffff00" onmousedown="saveDocSelection()" oninput="applyDocHighlightColor(this.value)" style="width:24px;height:24px;border:none;cursor:pointer;background:none">
+      </div>
+
+      <div class="bar-section">
+        <button class="bar-btn" onclick="execCmd('justifyLeft')" title="Align Left">░ Left</button>
+        <button class="bar-btn" onclick="execCmd('justifyCenter')" title="Align Center">▒ Center</button>
+        <button class="bar-btn" onclick="execCmd('justifyRight')" title="Align Right">▓ Right</button>
+        <button class="bar-btn" onclick="execCmd('justifyFull')" title="Justify">█ Justify</button>
+      </div>
+
+      <div class="bar-section">
+        <button class="bar-btn" onclick="execCmd('insertUnorderedList')" title="Bulleted List">• Bullet List</button>
+        <button class="bar-btn" onclick="execCmd('insertOrderedList')" title="Numbered List">1. Numbered List</button>
+        <button class="bar-btn" onclick="insertDocLink()" title="Insert Link">🔗 Link</button>
+      </div>
+
+      <div class="bar-section">
+        <button class="bar-btn" onclick="document.getElementById('docImageInput').click()" title="Insert Image File or URL">🖼️ Image</button>
+        <input type="file" id="docImageInput" accept="image/*" style="display:none" onchange="handleDocImageUpload(event)">
+        <button class="bar-btn" onclick="insertTableGrid()" title="Insert Table">📊 Table</button>
+        <button class="bar-btn" onclick="execCmd('insertHorizontalRule')" title="Horizontal Divider">— Line</button>
+      </div>
+
+      <div class="bar-section">
+        <button class="bar-btn" onclick="execCmd('removeFormat')" title="Clear Formatting">🧹 Clear</button>
+      </div>
+    </div>
+
+    <!-- Paper Sheet Canvas -->
+    <div class="editor-body-scroll">
+      <div class="paper-sheet" id="editorCanvas" contenteditable="true" placeholder="Start typing your document..." oninput="triggerAutoSave()" onmouseup="saveDocSelection()" onkeyup="saveDocSelection()"></div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="editor-status-bar">
+      <div class="status-group">
+        <span id="charCount">0 characters</span>
+        <span id="wordCount">0 words</span>
+        <span id="readTime">1 min read</span>
+      </div>
+      <span id="lastSavedText">Last saved: Just now</span>
+    </div>
+  </div>
+
+  <!-- ---------------- FULLSCREEN SPREADSHEET (SHEETS) EDITOR ---------------- -->
+  <div class="sheet-modal" id="sheetOverlay">
+    <div class="editor-header">
+      <div class="doc-meta-header">
+        <button class="btn-editor-back" onclick="closeSheetEditor()" title="Back to Workspace">←</button>
+        <span style="font-size:1.4rem">📊</span>
+        <input type="text" class="editor-title-field" id="sheetTitle" placeholder="Untitled Sheet" oninput="triggerSheetAutoSave()">
+        <button class="star-icon-btn" id="sheetStarBtn" onclick="toggleCurrentStar()" title="Star sheet">★</button>
+        <div class="save-indicator" id="sheetSaveStatus">
+          <span>✓</span> <span id="sheetSaveText">Saved to Drive</span>
+        </div>
+      </div>
+
+      <div class="editor-actions-top">
+        <button class="nav-btn" onclick="openVersionHistoryModal(currentDocId)">Version History</button>
+        <button class="nav-btn" onclick="openEmailModal(currentDocId)">Email Share</button>
+        <button class="nav-btn" onclick="exportSheetCSV()">Export CSV</button>
+        <button class="btn-create-sheet" onclick="saveSheet(); showToast('Sheet Saved!','success')" style="padding:8px 18px;font-size:0.88rem">Save Sheet</button>
+        <button class="nav-btn" onclick="closeSheetEditor()">Close</button>
+      </div>
+    </div>
+
+    <!-- Sheet Formatting Toolbar -->
+    <div class="sheet-bar">
+      <div class="bar-section">
+        <button class="bar-btn" onclick="applySheetFormat('bold')" title="Bold"><b>B</b></button>
+        <button class="bar-btn" onclick="applySheetFormat('italic')" title="Italic"><i>I</i></button>
+        <button class="bar-btn" onclick="applySheetFormat('underline')" title="Underline"><u>U</u></button>
+      </div>
+
+      <div class="bar-section">
+        <button class="bar-btn" onclick="applySheetFormat('alignLeft')" title="Align Left">░</button>
+        <button class="bar-btn" onclick="applySheetFormat('alignCenter')" title="Align Center">▒</button>
+        <button class="bar-btn" onclick="applySheetFormat('alignRight')" title="Align Right">▓</button>
+      </div>
+
+      <div class="bar-section">
+        <label style="font-size:0.75rem;color:var(--text-dim);margin-right:4px">Text:</label>
+        <input type="color" id="cellColorPicker" value="#ffffff" onchange="applySheetFormat('textColor', this.value)" style="width:24px;height:24px;border:none;cursor:pointer;background:none">
+        
+        <label style="font-size:0.75rem;color:var(--text-dim);margin-left:8px;margin-right:4px">Fill:</label>
+        <input type="color" id="cellBgPicker" value="#10101a" onchange="applySheetFormat('bgColor', this.value)" style="width:24px;height:24px;border:none;cursor:pointer;background:none">
+      </div>
+
+      <div class="bar-section">
+        <button class="bar-btn" onclick="insertSheetRow()" title="Insert Row Below">+ Row</button>
+        <button class="bar-btn" onclick="insertSheetCol()" title="Insert Column Right">+ Col</button>
+        <button class="bar-btn" onclick="deleteSheetRow()" style="color:var(--danger)" title="Delete Selected Row">❌ Row</button>
+      </div>
+
+      <div class="bar-section">
+        <button class="bar-btn" onclick="insertFormula('SUM')" title="Sum Range (e.g. =SUM(A1:A5))">=SUM</button>
+        <button class="bar-btn" onclick="insertFormula('AVERAGE')" title="Average Range">=AVG</button>
+        <button class="bar-btn" onclick="insertFormula('COUNT')" title="Count Range">=COUNT</button>
+        <button class="bar-btn" onclick="insertFormula('IF')" title="Logical IF">=IF</button>
+      </div>
+    </div>
+
+    <!-- Formula Bar -->
+    <div class="sheet-formula-wrap">
+      <div class="cell-id-badge" id="activeCellLabel">A1</div>
+      <span class="formula-prefix">fx</span>
+      <input type="text" class="formula-input" id="sheetFormulaInput" placeholder="Enter cell value or formula (e.g. =SUM(A1:A5) or =A1*B1)..." oninput="onFormulaBarInput(this.value)" onkeydown="if(event.key==='Enter')commitFormulaBar()">
+    </div>
+
+    <!-- Sheet Grid Container -->
+    <div class="sheet-grid-container" id="sheetGridContainer">
+      <table class="sheet-grid-table" id="sheetGridTable">
+        <thead id="sheetHead"></thead>
+        <tbody id="sheetBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Bottom Sheet Tabs Bar (Sheets Style) -->
+    <div class="sheet-tabs-bar" id="sheetTabsBar">
+      <div class="sheet-tab-item active-tab">Sheet1</div>
+      <button class="bar-btn" onclick="addNewWorksheetTab()" title="Add Sheet Tab" style="color:var(--sheet-accent);font-weight:700">+ Sheet</button>
+    </div>
+
+    <!-- Sheet Status Bar -->
+    <div class="editor-status-bar">
+      <div class="status-group">
+        <span id="sheetCellCount">Total Cells: 1,300</span>
+        <span id="sheetActiveVal">Active Cell: None</span>
+      </div>
+      <span id="sheetLastSaved">Last saved: Just now</span>
+    </div>
+  </div>
+
+  <!-- Version History Modal -->
+  <div class="modal-backdrop" id="versionModal">
+    <div class="modal-content">
+      <h3>Version History</h3>
+      <p>Inspect past version snapshots and restore anytime.</p>
+      <div id="versionList" style="max-height:280px;overflow-y:auto;margin-bottom:20px"></div>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('versionModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Document/Sheet Modal -->
+  <div class="modal-backdrop" id="nameModal">
+    <div class="modal-content">
+      <h3 id="createModalTitle">Create New Item</h3>
+      <p id="createModalSub">Give your item a title to get started.</p>
+      <input type="text" class="modal-field" id="newDocName" placeholder="Untitled Item" maxlength="100" onkeydown="if(event.key==='Enter')confirmCreateDoc()">
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('nameModal')">Cancel</button>
+        <button class="btn-modal-confirm" id="confirmCreateBtn" onclick="confirmCreateDoc()">Create Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Modal -->
+  <div class="modal-backdrop" id="renameModal">
+    <div class="modal-content">
+      <h3>Rename Item</h3>
+      <p>Enter a new title for this item.</p>
+      <input type="text" class="modal-field" id="renameDocName" placeholder="Item Title" maxlength="100" onkeydown="if(event.key==='Enter')confirmRename()">
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('renameModal')">Cancel</button>
+        <button class="btn-modal-confirm" onclick="confirmRename()">Rename</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Modal -->
+  <div class="modal-backdrop" id="exportModal">
+    <div class="modal-content">
+      <h3>Export Item</h3>
+      <p id="exportModalSub">Select your preferred export format.</p>
+      <select class="modal-field" id="exportFormat">
+        <option value="html">HTML Document (.html)</option>
+        <option value="txt">Plain Text (.txt)</option>
+        <option value="md">Markdown File (.md)</option>
+        <option value="csv">CSV Spreadsheet (.csv)</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('exportModal')">Cancel</button>
+        <button class="btn-modal-confirm" onclick="confirmExport()">Download File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move to Trash Modal -->
+  <div class="modal-backdrop" id="deleteModal">
+    <div class="modal-content">
+      <h3>Move to Trash</h3>
+      <p id="deleteMsg">Move this item to trash bin? You can restore it later.</p>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+        <button class="btn-modal-danger" onclick="confirmDelete()">Move to Trash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Share Modal -->
+  <div class="modal-backdrop" id="emailModal">
+    <div class="modal-content" style="max-width:480px">
+      <h3>Share via Email</h3>
+      <p id="emailDocTitle">Send this item directly via SMTP email.</p>
+      <input type="email" class="modal-field" id="emailTo" placeholder="recipient@domain.com" onkeydown="if(event.key==='Enter')confirmEmailShare()">
+      <textarea class="modal-field" id="emailMessage" placeholder="Add an optional message..." rows="3" style="resize:vertical"></textarea>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('emailModal')">Cancel</button>
+        <button class="btn-modal-confirm" onclick="confirmEmailShare()">Send Email</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Access Sharing Modal -->
+  <div class="modal-backdrop" id="userShareModal">
+    <div class="modal-content" style="max-width:480px">
+      <h3>👥 Manage User Access</h3>
+      <p id="userShareDocTitle" style="color:var(--text-dim);font-size:0.88rem;margin-bottom:14px">Grant specific access roles (Viewer, Editor, Admin) to users registered on this platform.</p>
+      
+      <div style="background:var(--surface2);padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:16px">
+        <label style="color:var(--text-bright);font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px">Select Registered User</label>
+        <select class="modal-field" id="userShareSelect" style="margin-bottom:12px">
+          <option value="">Loading users...</option>
+        </select>
+
+        <label style="color:var(--text-bright);font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px">Access Role</label>
+        <select class="modal-field" id="userShareRole" style="margin-bottom:14px">
+          <option value="viewer">👁️ Viewer (Read & Download)</option>
+          <option value="editor">✏️ Editor (Read, Download & Edit)</option>
+          <option value="admin">🛡️ Admin / Co-owner (Full Access)</option>
+        </select>
+
+        <button onclick="confirmGrantUserAccess()" class="btn-modal-confirm" style="width:100%">Grant Access</button>
+      </div>
+
+      <h4 style="font-size:0.9rem;color:var(--text-bright);margin-bottom:8px">Users with Access</h4>
+      <div id="userShareList" style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        <p style="color:var(--text-dim);font-size:0.8rem;font-style:italic">Not shared with anyone yet.</p>
+      </div>
+
+      <div style="background:rgba(255,107,107,0.08);padding:12px;border-radius:6px;border:1px solid rgba(255,107,107,0.25);margin-bottom:14px">
+        <h4 style="font-size:0.84rem;color:var(--danger);margin-bottom:4px">👑 Transfer Ownership</h4>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:8px">Transfer full ownership of this document/sheet to the selected user above.</p>
+        <button onclick="confirmTransferOwnership()" class="btn-modal-danger" style="width:100%;font-size:0.82rem;padding:8px">Transfer Ownership</button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('userShareModal')" style="width:100%">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permanent Delete Modal -->
+  <div class="modal-backdrop" id="permanentModal">
+    <div class="modal-content">
+      <h3>Delete Permanently</h3>
+      <p id="permanentMsg">Permanently delete this item? This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('permanentModal')">Cancel</button>
+        <button class="btn-modal-danger" onclick="confirmPermanentDelete()">Delete Forever</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal-backdrop" id="logoutModal">
+    <div class="modal-content">
+      <h3>Sign Out</h3>
+      <p>Are you sure you want to sign out of Abdullah Drive?</p>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn-modal-danger" onclick="handleLogout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let authToken = localStorage.getItem('token');
+    let allDocs = [];
+    let allFolders = [];
+    let trashDocs = [];
+    let currentFolderId = 'root';
+    const _urlFilter = new URLSearchParams(window.location.search).get('filter');
+    let currentFilter = ['docsOnly','sheetsOnly','myDocs','starred','sharedWithMe','trash'].includes(_urlFilter) ? _urlFilter : 'docsOnly';
+    let currentViewMode = 'grid';
+    let currentDocId = null;
+    let currentCreateType = 'doc';
+    let selectedFolderColor = '#fdcb6e';
+    let renameDocId = null;
+    let exportDocId = null;
+    let deleteDocId = null;
+    let emailDocId = null;
+    let permanentDeleteId = null;
+    let autoSaveTimeout = null;
+    let sheetAutoSaveTimeout = null;
+    let searchTimeout = null;
+    let hasUnsavedChanges = false;
+
+    // --- SPREADSHEET ENGINE STATE ---
+    let sheetData = {};
+    let sheetRowCount = 40;
+    let sheetColCount = 26;
+    let activeCellId = 'A1';
+
+    async function apiFetch(url, options = {}) {
+      if (!options.headers) options.headers = {};
+      options.headers['Authorization'] = 'Bearer ' + authToken;
+      if (options.body && typeof options.body === 'string') {
+        options.headers['Content-Type'] = 'application/json';
+      }
+      const res = await fetch(url, options);
+      if (res.status === 401) { window.location.href = '/login'; return null; }
+      return res;
+    }
+
+    async function checkAuth() {
+      if (!authToken) { window.location.href = '/login'; return; }
+      try {
+        const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        const data = await res.json();
+        if (!data.success) { window.location.href = '/login'; return; }
+        const authNav = document.getElementById('authNavGroup');
+        if (authNav) authNav.style.display = 'none';
+        const userPill = document.getElementById('userPill');
+        if (userPill) userPill.style.display = 'flex';
+        document.getElementById('userName').textContent = data.user.username;
+        document.getElementById('userAvatar').textContent = data.user.username.charAt(0).toUpperCase();
+        if (data.user.role === 'admin') {
+          document.getElementById('adminBtn').style.display = 'flex';
+        }
+      } catch (err) { window.location.href = '/login'; }
+    }
+
+    async function handleLogout() {
+      try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + authToken } }); } catch (err) {}
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+
+    async function loadDocuments() {
+      try {
+        const resFolders = await apiFetch('/api/folders');
+        if (resFolders) {
+          const dataF = await resFolders.json();
+          if (dataF.success) allFolders = dataF.folders;
+        }
+      } catch (err) {}
+
+      try {
+        const res = await apiFetch('/api/documents');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) allDocs = data.documents;
+      } catch (err) {}
+
+      try {
+        const resTrash = await apiFetch('/api/documents-trash');
+        if (resTrash) {
+          const dataTrash = await resTrash.json();
+          if (dataTrash.success) trashDocs = dataTrash.documents;
+        }
+      } catch (err) {}
+
+      updateCounts();
+      renderFoldersGrid();
+      renderWorkspace();
+    }
+
+    let currentShareDocId = null;
+
+    async function openUserShareModal(docId) {
+      currentShareDocId = docId;
+      const doc = allDocs.find(d => d.id === docId) || sharedDocsList.find(d => d.id === docId);
+      if (!doc) return;
+      document.getElementById('userShareDocTitle').textContent = `Manage registered user access for "${doc.title}"`;
+      openModal('userShareModal');
+
+      const select = document.getElementById('userShareSelect');
+      select.innerHTML = '<option value="">Loading users...</option>';
+      try {
+        const res = await apiFetch('/api/users/list');
+        if (res) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.users)) {
+            if (data.users.length === 0) {
+              select.innerHTML = '<option value="">No other registered users found</option>';
+            } else {
+              select.innerHTML = '<option value="">-- Select User --</option>' + data.users.map(u => `<option value="${u.id}">${escapeHtml(u.username)} (${escapeHtml(u.email)})</option>`).join('');
+            }
+          }
+        }
+      } catch (err) { select.innerHTML = '<option value="">Error loading users</option>'; }
+
+      renderUserShareList(doc);
+    }
+
+    function renderUserShareList(doc) {
+      const container = document.getElementById('userShareList');
+      if (!doc.sharedWith || !doc.sharedWith.length) {
+        container.innerHTML = '<p style="color:var(--text-dim);font-size:0.8rem;font-style:italic">Not shared with anyone yet.</p>';
+        return;
+      }
+
+      container.innerHTML = doc.sharedWith.map(s => {
+        const roleBadge = s.role === 'admin' ? '<span style="background:rgba(121,40,202,0.3);color:var(--primary-light);padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">🛡️ Admin</span>' :
+                          s.role === 'editor' ? '<span style="background:rgba(0,223,216,0.2);color:var(--accent-cyan);padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">✏️ Editor</span>' :
+                          '<span style="background:rgba(255,255,255,0.1);color:var(--text-dim);padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">👁️ Viewer</span>';
+
+        return `<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);padding:8px 12px;border-radius:6px;border:1px solid var(--border)">
+          <div>
+            <strong style="color:var(--text-bright);font-size:0.85rem">${escapeHtml(s.username)}</strong>
+            <span style="color:var(--text-dim);font-size:0.78rem;margin-left:6px">(${escapeHtml(s.email)})</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${roleBadge}
+            <button onclick="revokeUserAccess('${s.userId}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.85rem" title="Revoke Access">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function confirmGrantUserAccess() {
+      if (!currentShareDocId) return;
+      const targetUser = document.getElementById('userShareSelect').value;
+      const role = document.getElementById('userShareRole').value;
+      if (!targetUser) {
+        showToast('Please select a target user', 'error');
+        return;
+      }
+      try {
+        const res = await apiFetch(`/api/documents/${currentShareDocId}/share-user`, {
+          method: 'POST',
+          body: JSON.stringify({ targetUser, role })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast(data.message || 'Access granted!', 'success');
+            const doc = allDocs.find(d => d.id === currentShareDocId);
+            if (doc) doc.sharedWith = data.sharedWith;
+            renderUserShareList(doc || { sharedWith: data.sharedWith });
+          } else {
+            showToast(data.error || 'Failed to grant access', 'error');
+          }
+        }
+      } catch (err) { showToast('Failed to grant access', 'error'); }
+    }
+
+    async function revokeUserAccess(targetUserId) {
+      if (!currentShareDocId || !targetUserId) return;
+      try {
+        const res = await apiFetch(`/api/documents/${currentShareDocId}/unshare-user`, {
+          method: 'POST',
+          body: JSON.stringify({ targetUserId })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast('Access revoked', 'success');
+            const doc = allDocs.find(d => d.id === currentShareDocId);
+            if (doc) doc.sharedWith = data.sharedWith;
+            renderUserShareList(doc || { sharedWith: data.sharedWith });
+          } else {
+            showToast(data.error || 'Failed to revoke access', 'error');
+          }
+        }
+      } catch (err) { showToast('Failed to revoke access', 'error'); }
+    }
+
+    async function confirmTransferOwnership() {
+      if (!currentShareDocId) return;
+      const targetUser = document.getElementById('userShareSelect').value;
+      if (!targetUser) {
+        showToast('Please select a registered user to transfer ownership to', 'error');
+        return;
+      }
+      if (!confirm('Are you sure you want to transfer full ownership of this item?')) return;
+      try {
+        const res = await apiFetch(`/api/documents/${currentShareDocId}/transfer-ownership`, {
+          method: 'POST',
+          body: JSON.stringify({ targetUserId: targetUser })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast(data.message || 'Ownership transferred successfully!', 'success');
+            closeModal('userShareModal');
+            loadDocuments();
+          } else {
+            showToast(data.error || 'Failed to transfer ownership', 'error');
+          }
+        }
+      } catch (err) { showToast('Failed to transfer ownership', 'error'); }
+    }
+
+    function updateCounts() {
+      const myDocsCount = allDocs.length;
+      const docsOnlyCount = allDocs.filter(d => d.docType !== 'sheet').length;
+      const sheetsOnlyCount = allDocs.filter(d => d.docType === 'sheet').length;
+      const starredCount = allDocs.filter(d => d.isStarred).length;
+      const trashCount = trashDocs.length;
+
+      document.getElementById('countMyDocs').textContent = myDocsCount;
+      document.getElementById('countDocsOnly').textContent = docsOnlyCount;
+      document.getElementById('countSheetsOnly').textContent = sheetsOnlyCount;
+      document.getElementById('countStarred').textContent = starredCount;
+      document.getElementById('countTrash').textContent = trashCount;
+
+      const fillPct = Math.min(100, Math.round((myDocsCount / 50) * 100));
+      document.getElementById('storageBar').style.width = fillPct + '%';
+      document.getElementById('storagePercent').textContent = fillPct + '%';
+      document.getElementById('storageText').textContent = `${myDocsCount} file${myDocsCount !== 1 ? 's' : ''} stored`;
+    }
+
+    // --- Folders Engine ---
+    function renderFoldersGrid() {
+      const grid = document.getElementById('foldersGrid');
+      const section = document.getElementById('foldersSection');
+      if (!grid || !section) return;
+      if (currentFilter !== 'myDocs' || !allFolders.length) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = 'block';
+
+      grid.innerHTML = allFolders.map(f => `
+        <div class="folder-card ${currentFolderId === f.id ? 'active-folder' : ''}" onclick="navigateToFolder('${f.id}')">
+          <span class="folder-icon" style="color:${f.color || '#fdcb6e'}">📁</span>
+          <span class="folder-name">${escapeHtml(f.name)}</span>
+          <button style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.8rem" onclick="deleteFolder('${f.id}', event)">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function navigateToFolder(folderId) {
+      currentFolderId = folderId;
+      const trail = document.getElementById('breadcrumbTrail');
+      if (trail) {
+        if (folderId === 'root') {
+          trail.innerHTML = `<span class="breadcrumb-item active" onclick="navigateToFolder('root')">📁 My Drive</span>`;
+        } else {
+          const folder = allFolders.find(f => f.id === folderId);
+          const name = folder ? folder.name : 'Folder';
+          trail.innerHTML = `<span class="breadcrumb-item" onclick="navigateToFolder('root')">📁 My Drive</span> <span style="color:var(--text-dim)">></span> <span class="breadcrumb-item active">📁 ${escapeHtml(name)}</span>`;
+        }
+      }
+      renderFoldersGrid();
+      renderWorkspace();
+    }
+
+    function openCreateFolderModal() {
+      document.getElementById('newFolderName').value = '';
+      openModal('folderModal');
+      setTimeout(() => document.getElementById('newFolderName').focus(), 100);
+    }
+
+    function setFolderColor(color) {
+      selectedFolderColor = color;
+      showToast('Color Selected', 'success');
+    }
+
+    async function confirmCreateFolder() {
+      const name = document.getElementById('newFolderName').value.trim() || 'New Folder';
+      closeModal('folderModal');
+      try {
+        const res = await apiFetch('/api/folders', {
+          method: 'POST',
+          body: JSON.stringify({ name, color: selectedFolderColor, parentId: currentFolderId })
+        });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('Folder created', 'success');
+          loadDocuments();
+        }
+      } catch (err) { showToast('Failed to create folder', 'error'); }
+    }
+
+    async function deleteFolder(id, event) {
+      if (event) event.stopPropagation();
+      try {
+        const res = await apiFetch(`/api/folders/${id}`, { method: 'DELETE' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          if (currentFolderId === id) currentFolderId = 'root';
+          showToast('Folder deleted', 'success');
+          loadDocuments();
+        }
+      } catch (err) { showToast('Failed to delete folder', 'error'); }
+    }
+
+    let sharedDocsList = [];
+
+    function updateNavHighlight(filter) {
+      const navDocsBtn = document.getElementById('navDocsBtn');
+      const navSheetsBtn = document.getElementById('navSheetsBtn');
+      if (navDocsBtn) navDocsBtn.classList.toggle('active', filter === 'docsOnly');
+      if (navSheetsBtn) navSheetsBtn.classList.toggle('active', filter === 'sheetsOnly');
+    }
+
+    async function switchFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+      const activeTabMap = { myDocs: 'tabMyDocs', docsOnly: 'tabDocsOnly', sheetsOnly: 'tabSheetsOnly', starred: 'tabStarred', sharedWithMe: 'tabSharedWithMe', trash: 'tabTrash' };
+      if (activeTabMap[filter]) document.getElementById(activeTabMap[filter]).classList.add('active');
+
+      const titleMap = { myDocs: 'All Items', docsOnly: '📄 Docs', sheetsOnly: '📊 Sheets', starred: '⭐ Starred Items', sharedWithMe: '👥 Shared with Me', trash: '🗑️ Trash Bin' };
+      document.getElementById('viewTitle').textContent = titleMap[filter] || 'Items';
+
+      updateNavHighlight(filter);
+
+      if (filter === 'sharedWithMe') {
+        try {
+          const res = await apiFetch('/api/documents/shared-with-me');
+          if (res) {
+            const data = await res.json();
+            if (data.success) sharedDocsList = data.documents || [];
+          }
+        } catch (e) { showToast('Failed to load shared items', 'error'); }
+      }
+
+      renderFoldersGrid();
+      renderWorkspace();
+    }
+
+    function setMode(mode) {
+      currentViewMode = mode;
+      document.getElementById('btnGridView').classList.toggle('active', mode === 'grid');
+      document.getElementById('btnListView').classList.toggle('active', mode === 'list');
+      document.getElementById('docsGrid').style.display = mode === 'grid' ? 'grid' : 'none';
+      document.getElementById('docsTableWrap').style.display = mode === 'list' ? 'block' : 'none';
+    }
+
+    function getFilteredDocs() {
+      let docs = allDocs;
+      if (currentFilter === 'trash') return trashDocs;
+      if (currentFilter === 'sharedWithMe') return sharedDocsList;
+      if (currentFilter === 'docsOnly') docs = allDocs.filter(d => d.docType !== 'sheet');
+      if (currentFilter === 'sheetsOnly') docs = allDocs.filter(d => d.docType === 'sheet');
+      if (currentFilter === 'starred') docs = allDocs.filter(d => d.isStarred);
+      if (currentFilter === 'myDocs' && currentFolderId !== 'root') {
+        docs = docs.filter(d => d.folderId === currentFolderId);
+      }
+      return docs;
+    }
+
+    function sortDocs() {
+      const val = document.getElementById('sortSelect').value;
+      let docs = getFilteredDocs();
+      if (val === 'updatedDesc') docs.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      if (val === 'updatedAsc') docs.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+      if (val === 'titleAsc') docs.sort((a, b) => a.title.localeCompare(b.title));
+      renderDocsList(docs);
+    }
+
+    function renderWorkspace() {
+      const docs = getFilteredDocs();
+      document.getElementById('docCount').textContent = `${docs.length} item${docs.length !== 1 ? 's' : ''}`;
+      sortDocs();
+    }
+
+    function renderDocsList(docs) {
+      const isTrash = currentFilter === 'trash';
+      const grid = document.getElementById('docsGrid');
+      const tableBody = document.getElementById('docsTableBody');
+      const empty = document.getElementById('emptyState');
+
+      if (!docs.length) {
+        grid.innerHTML = '';
+        tableBody.innerHTML = '';
+        empty.style.display = 'block';
+        document.getElementById('emptyIcon').textContent = isTrash ? '🗑️' : (currentFilter === 'sheetsOnly' ? '📊' : '📃');
+        document.getElementById('emptyText').textContent = isTrash ? 'Trash is empty.' : (currentFilter === 'sheetsOnly' ? 'No spreadsheets created yet.' : 'No items found.');
+        return;
+      }
+      empty.style.display = 'none';
+
+      // Grid View
+      grid.innerHTML = docs.map(d => {
+        const isSheet = d.docType === 'sheet';
+        const preview = isSheet ? getSheetSummary(d.sheetsData) : (d.content ? stripHtml(d.content).substring(0, 140) || 'Empty document' : 'Empty document');
+        const isStarred = !!d.isStarred;
+
+        if (isTrash) {
+          return `
+          <div class="card-doc" style="opacity:0.8;border-color:rgba(255,107,107,0.4)">
+            <div class="card-top">
+              <div class="icon-doc-box" style="color:var(--danger);border-color:rgba(255,107,107,0.4)">🗑️</div>
+            </div>
+            <div class="card-doc-title" style="color:var(--text-dim)">${escapeHtml(d.title)}</div>
+            <div class="card-doc-snippet">${escapeHtml(preview)}</div>
+            <div class="card-doc-info">
+              <span>Trashed ${formatDate(d.trashedAt)}</span>
+            </div>
+            <div class="card-actions-bar">
+              <button class="btn-act-primary" onclick="restoreDocument('${d.id}')">Restore</button>
+              <button class="btn-act-email" style="background:rgba(255,107,107,0.2);color:var(--danger)" onclick="openPermanentDelete('${d.id}')">Delete Forever</button>
+            </div>
+          </div>`;
+        }
+
+        const ownerTag = d.ownerUsername ? `<span style="background:rgba(108,92,231,0.2);color:var(--primary-light);padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:700;margin-bottom:6px;display:inline-block">Shared by @${escapeHtml(d.ownerUsername)} (${d.myRole || 'viewer'})</span>` : '';
+
+        return `
+        <div class="card-doc ${isSheet ? 'sheet-card' : ''}" ondblclick="openItemEditor('${d.id}')">
+          <button class="menu-dots-btn" onclick="toggleContextMenu('menu_${d.id}', event)" title="More Actions">⋮</button>
+          <div class="card-context-menu" id="menu_${d.id}">
+            <div class="menu-item-act" onclick="openItemEditor('${d.id}'); closeAllContextMenus()"><span class="icon">${isSheet ? '📊' : '📄'}</span> ${isSheet ? 'Open Sheet' : 'Edit Doc'}</div>
+            <div class="menu-item-act" onclick="openUserShareModal('${d.id}'); closeAllContextMenus()"><span class="icon">👥</span> User Access</div>
+            <div class="menu-item-act" onclick="openExportModal('${d.id}'); closeAllContextMenus()"><span class="icon">💾</span> Export</div>
+            <div class="menu-item-act" onclick="openEmailModal('${d.id}'); closeAllContextMenus()"><span class="icon">📧</span> Email Share</div>
+            <div class="menu-item-act" onclick="openRenameModal('${d.id}'); closeAllContextMenus()"><span class="icon">✏️</span> Rename</div>
+            ${currentFilter !== 'sharedWithMe' ? `<div class="menu-item-act danger" onclick="openDeleteModal('${d.id}'); closeAllContextMenus()"><span class="icon">🗑️</span> Move to Trash</div>` : ''}
+          </div>
+          ${ownerTag}
+          <div class="card-top">
+            <div class="icon-doc-box ${isSheet ? 'sheet-icon-box' : ''}">${isSheet ? '📊' : '📄'}</div>
+            <button class="star-icon-btn ${isStarred ? 'active' : ''}" onclick="toggleStar('${d.id}', event)" style="margin-right:32px">${isStarred ? '★' : '☆'}</button>
+          </div>
+          <div class="card-doc-title">
+            ${escapeHtml(d.title)}
+            <span class="doc-type-tag ${isSheet ? 'sheet' : 'doc'}">${isSheet ? 'SHEET' : 'DOC'}</span>
+          </div>
+          <div class="card-doc-snippet">${escapeHtml(preview)}</div>
+          <div class="card-doc-info">
+            <span>${formatDate(d.updatedAt)}</span>
+            <span>${isSheet ? 'Spreadsheet' : 'Document'}</span>
+          </div>
+          <div class="card-actions-bar">
+            <button class="${isSheet ? 'btn-act-sheet' : 'btn-act-primary'}" onclick="openItemEditor('${d.id}')">${isSheet ? 'Open Sheet' : 'Edit Doc'}</button>
+            <button class="btn-act-sub" onclick="openUserShareModal('${d.id}')">👥 Access</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      // List View Table
+      tableBody.innerHTML = docs.map(d => {
+        const isSheet = d.docType === 'sheet';
+        const isStarred = !!d.isStarred;
+
+        if (isTrash) {
+          return `
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px;font-weight:600"><span style="color:var(--danger)">🗑️</span> ${escapeHtml(d.title)}</div></td>
+            <td>—</td>
+            <td>Trashed ${formatDate(d.trashedAt)}</td>
+            <td>${isSheet ? 'Spreadsheet' : 'Word Doc'}</td>
+            <td>
+              <button class="btn-act-primary" onclick="restoreDocument('${d.id}')" style="padding:6px 12px">Restore</button>
+              <button class="btn-act-email" onclick="openPermanentDelete('${d.id}')" style="padding:6px 12px;background:rgba(255,107,107,0.2);color:var(--danger)">Delete Forever</button>
+            </td>
+          </tr>`;
+        }
+
+        return `
+        <tr ondblclick="openItemEditor('${d.id}')">
+          <td><div style="display:flex;align-items:center;gap:10px;font-weight:600;color:var(--text-bright)"><span>${isSheet ? '📊' : '📄'}</span> ${escapeHtml(d.title)} <span class="doc-type-tag ${isSheet ? 'sheet' : 'doc'}">${isSheet ? 'SHEET' : 'DOC'}</span></div></td>
+          <td><button class="star-icon-btn ${isStarred ? 'active' : ''}" onclick="toggleStar('${d.id}', event)">${isStarred ? '★' : '☆'}</button></td>
+          <td>${formatDate(d.updatedAt)}</td>
+          <td>${isSheet ? 'Spreadsheet' : 'Word Document'}</td>
+          <td>
+            <button class="${isSheet ? 'btn-act-sheet' : 'btn-act-primary'}" onclick="openItemEditor('${d.id}')" style="padding:6px 12px">${isSheet ? 'Open Sheet' : 'Edit'}</button>
+            <button class="btn-act-sub" onclick="openExportModal('${d.id}')" style="padding:6px 12px">Export</button>
+            <button class="btn-act-email" onclick="openEmailModal('${d.id}')" style="padding:6px 12px">Email</button>
+            <button class="btn-act-sub" onclick="openRenameModal('${d.id}')" style="padding:6px 12px">Rename</button>
+            <button class="btn-act-sub" style="color:var(--danger);padding:6px 12px" onclick="openDeleteModal('${d.id}')">Trash</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function getSheetSummary(data) {
+      if (!data || !Object.keys(data).length) return 'Empty spreadsheet grid';
+      const cellKeys = Object.keys(data);
+      return `${cellKeys.length} cell${cellKeys.length !== 1 ? 's' : ''} filled with data`;
+    }
+
+    function openVersionHistoryModal(id) {
+      const doc = allDocs.find(d => d.id === id);
+      if (!doc) return;
+      const list = document.getElementById('versionList');
+      const versions = doc.versions || [];
+      if (!versions.length) {
+        list.innerHTML = `<div style="color:var(--text-dim);font-size:0.9rem">No past version snapshots available yet.</div>`;
+      } else {
+        list.innerHTML = versions.map((v, i) => `
+          <div class="version-item">
+            <div class="version-info">
+              <div><strong>Version ${i + 1}</strong> — ${new Date(v.timestamp).toLocaleString()}</div>
+            </div>
+            <button class="btn-act-primary" onclick="restoreVersionSnapshot('${id}', ${i})" style="padding:4px 10px;font-size:0.8rem">Restore</button>
+          </div>
+        `).join('');
+      }
+      openModal('versionModal');
+    }
+
+    async function restoreVersionSnapshot(docId, index) {
+      const doc = allDocs.find(d => d.id === docId);
+      if (!doc || !doc.versions || !doc.versions[index]) return;
+      const snap = doc.versions[index];
+      closeModal('versionModal');
+      try {
+        const res = await apiFetch(`/api/documents/${docId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ title: snap.title, content: snap.content, sheetsData: snap.sheetsData })
+        });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('Restored past version!', 'success');
+          loadDocuments();
+          if (doc.docType === 'sheet') openSheetEditor(docId); else editDocument(docId);
+        }
+      } catch (err) { showToast('Failed to restore version', 'error'); }
+    }
+
+    function handleDocImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = '';
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        execCmd('insertImage', e.target.result);
+        showToast('Image inserted!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function insertImagePrompt() {
+      const url = prompt('Enter Image URL:');
+      if (url) execCmd('insertImage', url);
+    }
+
+    function insertTableGrid() {
+      const rowsInput = prompt('Enter number of rows:', '3');
+      if (!rowsInput) return;
+      const colsInput = prompt('Enter number of columns:', '3');
+      if (!colsInput) return;
+      const r = Math.max(1, Math.min(20, parseInt(rowsInput) || 3));
+      const c = Math.max(1, Math.min(20, parseInt(colsInput) || 3));
+
+      let html = `<table border="1" style="width:100%;border-collapse:collapse;margin:12px 0;border:1px solid var(--border)">`;
+      for (let i = 0; i < r; i++) {
+        html += `<tr>`;
+        for (let j = 0; j < c; j++) {
+          html += `<td style="padding:10px;border:1px solid var(--border);min-width:60px">${i === 0 ? `<b>Header ${j+1}</b>` : `Cell ${i},${j+1}`}</td>`;
+        }
+        html += `</tr>`;
+      }
+      html += `</table><p><br></p>`;
+      execCmd('insertHTML', html);
+      showToast(`Inserted ${r}x${c} Table`, 'success');
+    }
+
+    function addNewWorksheetTab() {
+      const tabName = prompt('Enter Worksheet Tab Name:', `Sheet${(document.querySelectorAll('.sheet-tab-item').length || 1) + 1}`);
+      if (!tabName) return;
+      const tabWrap = document.getElementById('sheetTabsBar');
+      const addBtn = tabWrap.querySelector('button');
+      const newTab = document.createElement('div');
+      newTab.className = 'sheet-tab-item';
+      newTab.textContent = escapeHtml(tabName);
+      newTab.onclick = function() {
+        document.querySelectorAll('.sheet-tab-item').forEach(t => t.classList.remove('active-tab'));
+        newTab.classList.add('active-tab');
+        showToast(`Switched to ${tabName}`, 'success');
+      };
+      tabWrap.insertBefore(newTab, addBtn);
+      newTab.click();
+    }
+
+    async function createNewDocWithTemplate(type, templateId) {
+      try {
+        const title = templateId === 'meeting_notes' ? 'Meeting Notes (Template)' :
+                      templateId === 'project_roadmap' ? 'Project Roadmap (Template)' :
+                      templateId === 'budget_sheet' ? 'Monthly Budget (Template)' : 'Untitled';
+
+        const res = await apiFetch('/api/documents', {
+          method: 'POST',
+          body: JSON.stringify({ title, docType: type, templateId })
+        });
+        if (res) {
+          const data = await res.json();
+          if (data.success) {
+            showToast('Template created!', 'success');
+            loadDocuments();
+            openEditor(data.document.id);
+          }
+        }
+      } catch (e) { showToast('Failed to create template', 'error'); }
+    }
+
+    async function handleDocImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = '';
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const text = e.target.result;
+        const title = file.name.replace(/\.(html|htm|txt|md)$/i, '');
+        let content = text;
+        // Wrap plain text in paragraph tags for .txt/.md
+        if (file.name.match(/\.(txt|md)$/i)) {
+          content = text.split('\n').map(line => `<p>${escapeHtml(line)}</p>`).join('');
+        }
+        try {
+          const res = await apiFetch('/api/documents', {
+            method: 'POST',
+            body: JSON.stringify({ title, content, docType: 'doc' })
+          });
+          if (!res) return;
+          const data = await res.json();
+          if (data.success) {
+            showToast('Imported \"' + title + '\" as Document', 'success');
+            loadDocuments();
+          }
+        } catch (err) { showToast('Failed to import document', 'error'); }
+      };
+      reader.readAsText(file);
+    }
+
+    async function handleSheetImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = '';
+      const title = file.name.replace(/\.(xlsx|xls|csv|tsv|ods)$/i, '');
+      const ext = file.name.split('.').pop().toLowerCase();
+
+      // For CSV/TSV: read as text
+      if (ext === 'csv' || ext === 'tsv') {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          const text = e.target.result;
+          const parsedData = parseCSVToSheetData(text, ext === 'tsv' ? '\t' : ',');
+          await createSheetFromData(title, parsedData);
+        };
+        reader.readAsText(file);
+        return;
+      }
+
+      // For XLSX, XLS, ODS: read as ArrayBuffer and use SheetJS
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const parsedData = worksheetToSheetData(worksheet);
+          await createSheetFromData(title, parsedData);
+        } catch (err) {
+          console.error('Sheet parse error:', err);
+          showToast('Failed to parse file. Unsupported format?', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function worksheetToSheetData(worksheet) {
+      const data = {};
+      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+      for (let r = range.s.r; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellAddr = XLSX.utils.encode_cell({ r, c });
+          const cell = worksheet[cellAddr];
+          if (cell && cell.v !== undefined && cell.v !== null && String(cell.v).trim() !== '') {
+            const ourCellId = colName(c) + (r + 1);
+            data[ourCellId] = { value: String(cell.v) };
+          }
+        }
+      }
+      return data;
+    }
+
+    async function createSheetFromData(title, parsedData) {
+      try {
+        const res = await apiFetch('/api/documents', {
+          method: 'POST',
+          body: JSON.stringify({ title, content: '', docType: 'sheet', sheetsData: parsedData })
+        });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('Imported "' + title + '" as Sheet', 'success');
+          loadDocuments();
+        }
+      } catch (err) { showToast('Failed to import spreadsheet', 'error'); }
+    }
+
+    function parseCSVToSheetData(csv, delimiter = ',') {
+      const data = {};
+      const rows = csv.split('\n').filter(r => r.trim());
+      for (let r = 0; r < rows.length; r++) {
+        const cols = delimiter === ',' ? parseCSVRow(rows[r]) : rows[r].split(delimiter);
+        for (let c = 0; c < cols.length; c++) {
+          const cellId = colName(c) + (r + 1);
+          if (cols[c].trim()) {
+            data[cellId] = { value: cols[c].trim() };
+          }
+        }
+      }
+      return data;
+    }
+
+    function parseCSVRow(row) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < row.length; i++) {
+        const ch = row[i];
+        if (inQuotes) {
+          if (ch === '"' && row[i + 1] === '"') { current += '"'; i++; }
+          else if (ch === '"') { inQuotes = false; }
+          else { current += ch; }
+        } else {
+          if (ch === '"') { inQuotes = true; }
+          else if (ch === ',') { result.push(current); current = ''; }
+          else { current += ch; }
+        }
+      }
+      result.push(current);
+      return result;
+    }
+
+    // --- Search ---
+    function debounceSearch() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(searchDocs, 300);
+    }
+
+    async function searchDocs() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) { renderWorkspace(); return; }
+      try {
+        const res = await apiFetch(`/api/documents-search?q=${encodeURIComponent(q)}`);
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) renderDocsList(data.documents);
+      } catch (err) {}
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = 'toast-popup ' + type;
+      toast.innerHTML = (type === 'success' ? '✓ ' : '✕ ') + message;
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    checkAuth().then(async () => {
+      await loadDocuments();
+      // Apply URL filter after load
+      await switchFilter(currentFilter);
+    });
+
+    // ===== MISSING CORE FUNCTIONS =====
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const diff = Date.now() - d;
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+      if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+      return d.toLocaleDateString();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function stripHtml(html) {
+      const tmp = document.createElement('DIV');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function toggleContextMenu(menuId, event) {
+      if (event) event.stopPropagation();
+      const targetMenu = document.getElementById(menuId);
+      const isOpen = targetMenu ? targetMenu.classList.contains('active') : false;
+      closeAllContextMenus();
+      if (targetMenu && !isOpen) {
+        targetMenu.classList.add('active');
+      }
+    }
+
+    function closeAllContextMenus() {
+      document.querySelectorAll('.card-context-menu').forEach(m => m.classList.remove('active'));
+    }
+
+    document.addEventListener('click', closeAllContextMenus);
+
+    // --- Star Toggle ---
+    async function toggleStar(id, event) {
+      if (event) event.stopPropagation();
+      try {
+        const res = await apiFetch(`/api/documents/${id}/star`, { method: 'POST' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          const doc = allDocs.find(d => d.id === id);
+          if (doc) doc.isStarred = data.document.isStarred;
+          updateCounts();
+          renderWorkspace();
+        }
+      } catch (err) {}
+    }
+
+    async function toggleCurrentStar() {
+      if (!currentDocId) return;
+      await toggleStar(currentDocId);
+      const doc = allDocs.find(d => d.id === currentDocId);
+      if (doc) {
+        document.getElementById('editorStarBtn').classList.toggle('active', !!doc.isStarred);
+        document.getElementById('editorStarBtn').textContent = doc.isStarred ? '★' : '☆';
+        document.getElementById('sheetStarBtn').classList.toggle('active', !!doc.isStarred);
+        document.getElementById('sheetStarBtn').textContent = doc.isStarred ? '★' : '☆';
+      }
+    }
+
+    // --- Create Item ---
+    function createNewDoc(type = 'doc') {
+      currentCreateType = type;
+      document.getElementById('newDocName').value = '';
+      document.getElementById('createModalTitle').textContent = type === 'sheet' ? 'Create New Sheet' : 'Create New Document';
+      document.getElementById('createModalSub').textContent = type === 'sheet' ? 'Enter a title for your spreadsheet.' : 'Enter a title for your document.';
+      document.getElementById('confirmCreateBtn').textContent = type === 'sheet' ? 'Create Sheet' : 'Create Document';
+      openModal('nameModal');
+      setTimeout(() => document.getElementById('newDocName').focus(), 100);
+    }
+
+    async function confirmCreateDoc() {
+      const name = document.getElementById('newDocName').value.trim() || (currentCreateType === 'sheet' ? 'Untitled Sheet' : 'Untitled Document');
+      closeModal('nameModal');
+      try {
+        const res = await apiFetch('/api/documents', {
+          method: 'POST',
+          body: JSON.stringify({ title: name, content: '', docType: currentCreateType, sheetsData: currentCreateType === 'sheet' ? {} : null })
+        });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          await loadDocuments();
+          openItemEditor(data.document.id);
+        }
+      } catch (err) { showToast('Failed to create item', 'error'); }
+    }
+
+    function openItemEditor(id) {
+      const doc = allDocs.find(d => d.id === id);
+      if (!doc) return;
+      if (doc.docType === 'sheet') openSheetEditor(id);
+      else editDocument(id);
+    }
+
+    // --- Rename ---
+    function openRenameModal(id) {
+      const doc = allDocs.find(d => d.id === id);
+      if (!doc) return;
+      renameDocId = id;
+      document.getElementById('renameDocName').value = doc.title;
+      openModal('renameModal');
+      setTimeout(() => { const inp = document.getElementById('renameDocName'); inp.focus(); inp.select(); }, 100);
+    }
+
+    async function confirmRename() {
+      const name = document.getElementById('renameDocName').value.trim();
+      if (!name) return showToast('Name cannot be empty', 'error');
+      const id = renameDocId;
+      closeModal('renameModal');
+      try {
+        const res = await apiFetch(`/api/documents/${id}`, { method: 'PUT', body: JSON.stringify({ title: name }) });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) { showToast('Item renamed', 'success'); loadDocuments(); }
+      } catch (err) { showToast('Failed to rename', 'error'); }
+    }
+
+    // --- Export ---
+    function openExportModal(id) {
+      exportDocId = id;
+      const doc = allDocs.find(d => d.id === id);
+      const isSheet = doc && doc.docType === 'sheet';
+      document.getElementById('exportModalSub').textContent = isSheet ? 'Export spreadsheet data.' : 'Select your preferred export format.';
+      if (isSheet) document.getElementById('exportFormat').value = 'csv';
+      openModal('exportModal');
+    }
+
+    function confirmExport() {
+      const doc = allDocs.find(d => d.id === exportDocId);
+      if (!doc) { closeModal('exportModal'); return; }
+      const format = document.getElementById('exportFormat').value;
+      closeModal('exportModal');
+
+      if (format === 'csv') {
+        exportDocAsCSV(doc);
+        return;
+      }
+
+      let content, filename, mimeType;
+      const rawText = stripHtml(doc.content || '');
+      if (format === 'html') {
+        content = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(doc.title)}</title><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:20px;line-height:1.8;color:#e2e2f0;background:#0a0a0f}</style></head><body><h1>${escapeHtml(doc.title)}</h1><div>${doc.content || ''}</div></body></html>`;
+        filename = doc.title + '.html'; mimeType = 'text/html';
+      } else if (format === 'md') {
+        content = `# ${doc.title}\n\n${rawText}`; filename = doc.title + '.md'; mimeType = 'text/markdown';
+      } else {
+        content = doc.title + '\n\n' + rawText; filename = doc.title + '.txt'; mimeType = 'text/plain';
+      }
+
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported as ' + format.toUpperCase(), 'success');
+    }
+
+    function exportDocAsCSV(doc) {
+      const sd = doc.sheetsData || {};
+      let maxRow = 1, maxCol = 0;
+      for (const key in sd) {
+        const m = key.match(/([A-Z]+)(\d+)/);
+        if (m) { maxRow = Math.max(maxRow, parseInt(m[2])); maxCol = Math.max(maxCol, colIndex(m[1])); }
+      }
+      let csv = '';
+      for (let r = 1; r <= maxRow; r++) {
+        const rowVals = [];
+        for (let c = 0; c <= maxCol; c++) {
+          const val = (sd[colName(c) + r] || {}).value || '';
+          rowVals.push(`"${String(val).replace(/"/g, '""')}"`);
+        }
+        csv += rowVals.join(',') + '\n';
+      }
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = (doc.title || 'Sheet') + '.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported CSV', 'success');
+    }
+
+    // --- Delete (Trash) ---
+    function openDeleteModal(id) {
+      const doc = allDocs.find(d => d.id === id);
+      if (!doc) return;
+      deleteDocId = id;
+      document.getElementById('deleteMsg').textContent = `Move "${doc.title}" to trash? You can restore it later.`;
+      openModal('deleteModal');
+    }
+
+    async function confirmDelete() {
+      const id = deleteDocId; closeModal('deleteModal');
+      try {
+        const res = await apiFetch(`/api/documents/${id}`, { method: 'DELETE' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) { showToast('Moved to trash', 'success'); if (currentDocId === id) { closeEditor(); closeSheetEditor(); } loadDocuments(); }
+      } catch (err) { showToast('Failed to delete', 'error'); }
+    }
+
+    async function restoreDocument(id) {
+      try {
+        const res = await apiFetch(`/api/documents/${id}/restore`, { method: 'POST' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) { showToast('Item restored', 'success'); loadDocuments(); }
+      } catch (err) { showToast('Failed to restore', 'error'); }
+    }
+
+    function openPermanentDelete(id) {
+      const doc = trashDocs.find(d => d.id === id);
+      if (!doc) return;
+      permanentDeleteId = id;
+      document.getElementById('permanentMsg').textContent = `Permanently delete "${doc.title}"? This cannot be undone.`;
+      openModal('permanentModal');
+    }
+
+    async function confirmPermanentDelete() {
+      const id = permanentDeleteId; closeModal('permanentModal');
+      try {
+        const res = await apiFetch(`/api/documents/${id}/permanent`, { method: 'DELETE' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) { showToast('Deleted permanently', 'success'); loadDocuments(); }
+      } catch (err) { showToast('Failed to delete', 'error'); }
+    }
+
+    // --- Email Share ---
+    function openEmailModal(id) {
+      const doc = allDocs.find(d => d.id === id);
+      if (!doc) return;
+      emailDocId = id;
+      document.getElementById('emailDocTitle').textContent = `Send "${doc.title}" via email.`;
+      document.getElementById('emailTo').value = '';
+      document.getElementById('emailMessage').value = '';
+      openModal('emailModal');
+      setTimeout(() => document.getElementById('emailTo').focus(), 100);
+    }
+
+    async function confirmEmailShare() {
+      const to = document.getElementById('emailTo').value.trim();
+      const message = document.getElementById('emailMessage').value.trim();
+      if (!to || !/\S+@\S+\.\S+/.test(to)) return showToast('Enter a valid email', 'error');
+      const id = emailDocId; closeModal('emailModal');
+      try {
+        const res = await apiFetch(`/api/documents/${id}/share-email`, { method: 'POST', body: JSON.stringify({ to, message }) });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) showToast('Sent to ' + to, 'success');
+        else showToast(data.error || 'Failed to send', 'error');
+      } catch (err) { showToast('Failed to send email', 'error'); }
+    }
+
+    // === WORD DOCS EDITOR ===
+    async function editDocument(id) {
+      try {
+        const res = await apiFetch(`/api/documents/${id}`);
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          currentDocId = id;
+          const doc = data.document;
+          document.getElementById('editorTitle').value = doc.title;
+          document.getElementById('editorCanvas').innerHTML = doc.content || '';
+          const starBtn = document.getElementById('editorStarBtn');
+          if (starBtn) {
+            starBtn.classList.toggle('active', !!doc.isStarred);
+            starBtn.textContent = doc.isStarred ? '★' : '☆';
+          }
+          hasUnsavedChanges = false;
+          setSaveStatus('Saved to Drive', false);
+          document.getElementById('lastSavedText').textContent = 'Last saved: ' + new Date(doc.updatedAt).toLocaleTimeString();
+          updateEditorStats();
+          document.getElementById('editorOverlay').classList.add('active');
+          document.getElementById('editorCanvas').focus();
+        }
+      } catch (err) { showToast('Failed to load document', 'error'); }
+    }
+
+    function closeEditor() {
+      clearTimeout(autoSaveTimeout);
+      if (hasUnsavedChanges) {
+        saveDocument().then(() => { document.getElementById('editorOverlay').classList.remove('active'); currentDocId = null; hasUnsavedChanges = false; loadDocuments(); });
+      } else {
+        document.getElementById('editorOverlay').classList.remove('active'); currentDocId = null; loadDocuments();
+      }
+    }
+
+    let savedDocRange = null;
+
+    function saveDocSelection() {
+      const sel = window.getSelection();
+      if (sel.rangeCount > 0) {
+        savedDocRange = sel.getRangeAt(0);
+      }
+    }
+
+    function restoreDocSelection() {
+      if (savedDocRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedDocRange);
+      }
+    }
+
+    function applyDocTextColor(color) {
+      restoreDocSelection();
+      document.execCommand('foreColor', false, color);
+      triggerAutoSave();
+    }
+
+    function applyDocHighlightColor(color) {
+      restoreDocSelection();
+      if (!document.execCommand('hiliteColor', false, color)) {
+        document.execCommand('backColor', false, color);
+      }
+      triggerAutoSave();
+    }
+
+    function applyDocFontName(font) {
+      if (!font) return;
+      restoreDocSelection();
+      document.execCommand('fontName', false, font);
+      triggerAutoSave();
+    }
+
+    function applyDocFontSize(size) {
+      if (!size) return;
+      restoreDocSelection();
+      document.execCommand('fontSize', false, size);
+      triggerAutoSave();
+    }
+
+    function applyDocFormatBlock(tag) {
+      if (!tag) return;
+      restoreDocSelection();
+      document.execCommand('formatBlock', false, `<${tag}>`);
+      triggerAutoSave();
+    }
+
+    function insertDocLink() {
+      restoreDocSelection();
+      const url = prompt('Enter URL to link:');
+      if (url) {
+        document.execCommand('createLink', false, url);
+        triggerAutoSave();
+      }
+    }
+
+    function execCmd(cmd, value = null) {
+      restoreDocSelection();
+      document.execCommand(cmd, false, value);
+      document.getElementById('editorCanvas').focus();
+      triggerAutoSave();
+    }
+
+    function triggerAutoSave() {
+      hasUnsavedChanges = true;
+      setSaveStatus('Saving...', true);
+      updateEditorStats();
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(saveDocument, 900);
+    }
+
+    function setSaveStatus(text, isSaving) {
+      document.getElementById('editorSaveText').textContent = text;
+      document.getElementById('editorSaveStatus').className = 'save-indicator' + (isSaving ? ' active' : '');
+    }
+
+    async function saveDocument() {
+      if (!currentDocId) return;
+      const title = document.getElementById('editorTitle').value.trim() || 'Untitled Document';
+      const content = document.getElementById('editorCanvas').innerHTML;
+      try {
+        const res = await apiFetch(`/api/documents/${currentDocId}`, { method: 'PUT', body: JSON.stringify({ title, content }) });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) { hasUnsavedChanges = false; setSaveStatus('Saved to Drive', false); document.getElementById('lastSavedText').textContent = 'Last saved: ' + new Date().toLocaleTimeString(); }
+      } catch (err) { setSaveStatus('Save Error', true); }
+    }
+
+    function updateEditorStats() {
+      const text = stripHtml(document.getElementById('editorCanvas').innerHTML);
+      const chars = text.length;
+      const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+      const minutes = Math.max(1, Math.ceil(words / 200));
+      document.getElementById('charCount').textContent = chars + ' characters';
+      document.getElementById('wordCount').textContent = words + ' words';
+      document.getElementById('readTime').textContent = minutes + ' min read';
+    }
+
+    // === SPREADSHEET (SHEETS) ENGINE ===
+    let evaluationStack = new Set();
+
+    function colName(index) {
+      let name = '';
+      while (index >= 0) { name = String.fromCharCode((index % 26) + 65) + name; index = Math.floor(index / 26) - 1; }
+      return name;
+    }
+
+    function colIndex(name) {
+      let index = 0;
+      for (let i = 0; i < name.length; i++) { index = index * 26 + (name.charCodeAt(i) - 64); }
+      return index - 1;
+    }
+
+    async function openSheetEditor(id) {
+      try {
+        const res = await apiFetch(`/api/documents/${id}`);
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          currentDocId = id;
+          const doc = data.document;
+          document.getElementById('sheetTitle').value = doc.title;
+          sheetData = doc.sheetsData || {};
+          
+          // Calculate dynamic grid bounds based on sheet data
+          let maxRow = 40, maxCol = 25;
+          for (const k in sheetData) {
+            const m = k.match(/([A-Z]+)(\d+)/);
+            if (m) {
+              maxRow = Math.max(maxRow, parseInt(m[2]));
+              maxCol = Math.max(maxCol, colIndex(m[1]));
+            }
+          }
+          sheetRowCount = maxRow;
+          sheetColCount = maxCol + 1;
+
+          const starBtn = document.getElementById('sheetStarBtn');
+          if (starBtn) {
+            starBtn.classList.toggle('active', !!doc.isStarred);
+            starBtn.textContent = doc.isStarred ? '★' : '☆';
+          }
+          setSheetSaveStatus('Saved to Drive', false);
+          document.getElementById('sheetLastSaved').textContent = 'Last saved: ' + new Date(doc.updatedAt).toLocaleTimeString();
+          buildSheetGrid();
+          document.getElementById('sheetOverlay').classList.add('active');
+          selectCell('A1');
+        }
+      } catch (err) { showToast('Failed to load sheet', 'error'); }
+    }
+
+    function closeSheetEditor() {
+      clearTimeout(sheetAutoSaveTimeout);
+      saveSheet().then(() => { document.getElementById('sheetOverlay').classList.remove('active'); currentDocId = null; loadDocuments(); });
+    }
+
+    function buildSheetGrid() {
+      const head = document.getElementById('sheetHead');
+      const body = document.getElementById('sheetBody');
+      let headRow = '<tr><th class="col-corner" style="width:45px;min-width:45px;max-width:45px">#</th>';
+      for (let c = 0; c < sheetColCount; c++) headRow += `<th style="width:120px;min-width:120px;max-width:120px">${colName(c)}</th>`;
+      headRow += '</tr>'; head.innerHTML = headRow;
+      let bodyRows = '';
+      for (let r = 1; r <= sheetRowCount; r++) {
+        bodyRows += `<tr><td class="row-num" style="width:45px;min-width:45px;max-width:45px">${r}</td>`;
+        for (let c = 0; c < sheetColCount; c++) {
+          const cellId = colName(c) + r;
+          const cellInfo = sheetData[cellId] || {};
+          const displayVal = evaluateCellVal(cellId);
+          let styles = '';
+          if (cellInfo.bold) styles += 'font-weight:bold;';
+          if (cellInfo.italic) styles += 'font-style:italic;';
+          if (cellInfo.underline) styles += 'text-decoration:underline;';
+          if (cellInfo.align) styles += `text-align:${cellInfo.align};`;
+          if (cellInfo.color) styles += `color:${cellInfo.color};`;
+          if (cellInfo.bg) styles += `background:${cellInfo.bg};`;
+          bodyRows += `<td class="sheet-cell" id="cell_${cellId}" data-cell="${cellId}" style="${styles}" onclick="selectCell('${cellId}')" ondblclick="editCellInline('${cellId}')" tabindex="0">${escapeHtml(displayVal)}</td>`;
+        }
+        bodyRows += '</tr>';
+      }
+      body.innerHTML = bodyRows;
+      document.getElementById('sheetCellCount').textContent = `Grid: ${sheetColCount} × ${sheetRowCount} (${sheetColCount * sheetRowCount} cells)`;
+    }
+
+    function selectCell(cellId) {
+      if (activeCellId) { const prev = document.getElementById(`cell_${activeCellId}`); if (prev) prev.classList.remove('active-cell'); }
+      activeCellId = cellId;
+      const curr = document.getElementById(`cell_${cellId}`);
+      if (curr) { curr.classList.add('active-cell'); curr.focus(); }
+      document.getElementById('activeCellLabel').textContent = cellId;
+      const cellInfo = sheetData[cellId] || {};
+      document.getElementById('sheetFormulaInput').value = cellInfo.formula || cellInfo.value || '';
+      document.getElementById('sheetActiveVal').textContent = `Cell ${cellId}: ${evaluateCellVal(cellId) || 'Empty'}`;
+    }
+
+    function editCellInline(cellId) {
+      selectCell(cellId);
+      const curr = document.getElementById(`cell_${cellId}`);
+      if (!curr) return;
+      const cellInfo = sheetData[cellId] || {};
+      const originalVal = cellInfo.formula || cellInfo.value || '';
+      curr.setAttribute('contenteditable', 'true');
+      curr.innerText = originalVal;
+      curr.focus();
+
+      const handlePaste = (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, text);
+      };
+      curr.addEventListener('paste', handlePaste);
+
+      const handleKey = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          curr.blur();
+          const match = cellId.match(/([A-Z]+)(\d+)/);
+          if (match) {
+            const nextRow = Math.min(sheetRowCount, parseInt(match[2]) + 1);
+            selectCell(match[1] + nextRow);
+          }
+        } else if (e.key === 'Tab') {
+          e.preventDefault();
+          curr.blur();
+          const match = cellId.match(/([A-Z]+)(\d+)/);
+          if (match) {
+            const nextCol = Math.min(sheetColCount - 1, colIndex(match[1]) + 1);
+            selectCell(colName(nextCol) + match[2]);
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          curr.innerText = evaluateCellVal(cellId);
+          curr.removeAttribute('contenteditable');
+          curr.removeEventListener('keydown', handleKey);
+          curr.removeEventListener('paste', handlePaste);
+        }
+      };
+
+      curr.addEventListener('keydown', handleKey);
+      const onBlur = () => {
+        curr.removeAttribute('contenteditable');
+        curr.removeEventListener('keydown', handleKey);
+        curr.removeEventListener('paste', handlePaste);
+        cellInputChanged(cellId, curr.innerText);
+        curr.removeEventListener('blur', onBlur);
+      };
+      curr.addEventListener('blur', onBlur);
+    }
+
+    function onFormulaBarInput(val) { if (activeCellId) cellInputChanged(activeCellId, val); }
+    function commitFormulaBar() { if (activeCellId) selectCell(activeCellId); }
+
+    function cellInputChanged(cellId, val) {
+      if (!sheetData[cellId]) sheetData[cellId] = {};
+      val = (val || '').trim();
+      if (val.startsWith('=')) { sheetData[cellId].formula = val; sheetData[cellId].value = ''; }
+      else { sheetData[cellId].value = val; delete sheetData[cellId].formula; }
+      refreshAllSheetCells();
+      triggerSheetAutoSave();
+    }
+
+    function evaluateCellVal(cellId) {
+      const info = sheetData[cellId];
+      if (!info) return '';
+      if (info.formula) {
+        if (evaluationStack.has(cellId)) return '#CIRCULAR!';
+        evaluationStack.add(cellId);
+        const res = parseFormula(info.formula);
+        evaluationStack.delete(cellId);
+        return res;
+      }
+      return info.value !== undefined ? info.value : '';
+    }
+
+    function parseFormula(formula) {
+      try {
+        let expr = formula.substring(1).toUpperCase().trim();
+        const rangeMatch = expr.match(/^(SUM|AVERAGE|AVG|COUNT|MIN|MAX)\(([A-Z]+[0-9]+):([A-Z]+[0-9]+)\)$/);
+        if (rangeMatch) {
+          const fn = rangeMatch[1], values = getCellRangeValues(rangeMatch[2], rangeMatch[3]);
+          if (fn === 'SUM') return values.reduce((a, b) => a + b, 0);
+          if (fn === 'AVERAGE' || fn === 'AVG') return values.length ? parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)) : 0;
+          if (fn === 'COUNT') return values.length;
+          if (fn === 'MIN') return values.length ? Math.min(...values) : 0;
+          if (fn === 'MAX') return values.length ? Math.max(...values) : 0;
+        }
+        // IF logic
+        const ifMatch = expr.match(/^IF\((.+),(.+),(.+)\)$/);
+        if (ifMatch) {
+          const cond = parseFormula('=' + ifMatch[1]);
+          return cond ? parseFormula('=' + ifMatch[2]) : parseFormula('=' + ifMatch[3]);
+        }
+        // Replace cell references with evaluated numeric or string values
+        expr = expr.replace(/([A-Z]+[0-9]+)/g, (match) => {
+          const val = evaluateCellVal(match);
+          if (val === '#CIRCULAR!') return 'NaN';
+          const num = parseFloat(val);
+          return isNaN(num) ? 0 : num;
+        });
+        const res = Function(`'use strict'; return (${expr})`)();
+        return isNaN(res) ? '#ERR!' : res;
+      } catch (err) { return '#VALUE!'; }
+    }
+
+    function getCellRangeValues(startCell, endCell) {
+      const ms = startCell.match(/([A-Z]+)([0-9]+)/), me = endCell.match(/([A-Z]+)([0-9]+)/);
+      if (!ms || !me) return [];
+      const minC = Math.min(colIndex(ms[1]), colIndex(me[1])), maxC = Math.max(colIndex(ms[1]), colIndex(me[1]));
+      const minR = Math.min(parseInt(ms[2]), parseInt(me[2])), maxR = Math.max(parseInt(ms[2]), parseInt(me[2]));
+      const vals = [];
+      for (let r = minR; r <= maxR; r++) {
+        for (let c = minC; c <= maxC; c++) {
+          const cellId = colName(c) + r;
+          const v = parseFloat(evaluateCellVal(cellId));
+          if (!isNaN(v)) vals.push(v);
+        }
+      }
+      return vals;
+    }
+
+    function refreshAllSheetCells() {
+      for (let r = 1; r <= sheetRowCount; r++) {
+        for (let c = 0; c < sheetColCount; c++) {
+          const id = colName(c) + r, el = document.getElementById(`cell_${id}`);
+          if (el) el.innerText = evaluateCellVal(id);
+        }
+      }
+    }
+
+    function applySheetFormat(type, value = null) {
+      if (!activeCellId) return;
+      if (!sheetData[activeCellId]) sheetData[activeCellId] = {};
+      const info = sheetData[activeCellId];
+      if (type === 'bold') info.bold = !info.bold;
+      if (type === 'italic') info.italic = !info.italic;
+      if (type === 'underline') info.underline = !info.underline;
+      if (type === 'alignLeft') info.align = 'left';
+      if (type === 'alignCenter') info.align = 'center';
+      if (type === 'alignRight') info.align = 'right';
+      if (type === 'textColor') info.color = value;
+      if (type === 'bgColor') info.bg = value;
+      const el = document.getElementById(`cell_${activeCellId}`);
+      if (el) {
+        el.style.fontWeight = info.bold ? 'bold' : 'normal';
+        el.style.fontStyle = info.italic ? 'italic' : 'normal';
+        el.style.textDecoration = info.underline ? 'underline' : 'none';
+        if (info.align) el.style.textAlign = info.align;
+        if (info.color) el.style.color = info.color;
+        if (info.bg) el.style.background = info.bg;
+      }
+      triggerSheetAutoSave();
+    }
+
+    function insertFormula(fnName) {
+      if (!activeCellId) return;
+      const fi = document.getElementById('sheetFormulaInput');
+      fi.value = `=${fnName}(A1:A5)`;
+      fi.focus();
+      onFormulaBarInput(fi.value);
+    }
+
+    function insertSheetRow() { sheetRowCount++; buildSheetGrid(); triggerSheetAutoSave(); showToast('Row added', 'success'); }
+    function insertSheetCol() { sheetColCount++; buildSheetGrid(); triggerSheetAutoSave(); showToast('Column added', 'success'); }
+    function deleteSheetRow() {
+      if (!activeCellId) return;
+      const rowNum = parseInt(activeCellId.match(/[0-9]+/)[0]);
+      for (let c = 0; c < sheetColCount; c++) delete sheetData[colName(c) + rowNum];
+      refreshAllSheetCells(); triggerSheetAutoSave(); showToast(`Cleared Row ${rowNum}`, 'success');
+    }
+
+    function triggerSheetAutoSave() {
+      setSheetSaveStatus('Saving...', true);
+      clearTimeout(sheetAutoSaveTimeout);
+      sheetAutoSaveTimeout = setTimeout(saveSheet, 900);
+    }
+
+    function setSheetSaveStatus(text, isSaving) {
+      document.getElementById('sheetSaveText').textContent = text;
+      document.getElementById('sheetSaveStatus').className = 'save-indicator' + (isSaving ? ' active' : '');
+    }
+
+    async function saveSheet() {
+      if (!currentDocId) return;
+      const title = document.getElementById('sheetTitle').value.trim() || 'Untitled Sheet';
+      try {
+        const res = await apiFetch(`/api/documents/${currentDocId}`, { method: 'PUT', body: JSON.stringify({ title, docType: 'sheet', sheetsData: sheetData }) });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) { setSheetSaveStatus('Saved to Drive', false); document.getElementById('sheetLastSaved').textContent = 'Last saved: ' + new Date().toLocaleTimeString(); }
+      } catch (err) { setSheetSaveStatus('Save Error', true); }
+    }
+
+    function exportSheetCSV() {
+      let csv = '';
+      for (let r = 1; r <= sheetRowCount; r++) {
+        const rowVals = []; let hasData = false;
+        for (let c = 0; c < sheetColCount; c++) {
+          const val = evaluateCellVal(colName(c) + r);
+          if (val !== '' && val !== null && val !== undefined) hasData = true;
+          rowVals.push(`"${String(val).replace(/"/g, '""')}"`);
+        }
+        if (hasData) csv += rowVals.join(',') + '\n';
+      }
+      const title = document.getElementById('sheetTitle').value.trim() || 'Sheet';
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = title + '.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported CSV', 'success');
+    }
+
+    // --- Keyboard Navigation ---
+    document.addEventListener('keydown', e => {
+      // Ignore keybindings when focused on inputs or textareas
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable) {
+        if (e.key === 'Escape') {
+          e.target.blur();
+        }
+        return;
+      }
+
+      if (document.getElementById('sheetOverlay').classList.contains('active')) {
+        if (!activeCellId) return;
+        const match = activeCellId.match(/([A-Z]+)([0-9]+)/);
+        if (!match) return;
+        let c = colIndex(match[1]), r = parseInt(match[2]);
+        if (e.key === 'ArrowDown') { r = Math.min(sheetRowCount, r + 1); selectCell(colName(c) + r); e.preventDefault(); }
+        if (e.key === 'ArrowUp') { r = Math.max(1, r - 1); selectCell(colName(c) + r); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { c = Math.min(sheetColCount - 1, c + 1); selectCell(colName(c) + r); e.preventDefault(); }
+        if (e.key === 'ArrowLeft') { c = Math.max(0, c - 1); selectCell(colName(c) + r); e.preventDefault(); }
+      }
+      if (e.key === 'Escape') {
+        const modals = ['logoutModal', 'emailModal', 'permanentModal', 'deleteModal', 'exportModal', 'renameModal', 'nameModal', 'versionModal'];
+        for (const m of modals) { if (document.getElementById(m).classList.contains('active')) { closeModal(m); return; } }
+        if (document.getElementById('editorOverlay').classList.contains('active')) closeEditor();
+        if (document.getElementById('sheetOverlay').classList.contains('active')) closeSheetEditor();
+      }
+    });
+  </script>
+</body>
+</html>

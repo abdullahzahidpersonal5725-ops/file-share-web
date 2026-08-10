@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Abdullah File Share</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0a0a0f;
+      --surface:#12121a;
+      --surface2:#1a1a28;
+      --border:#2a2a3a;
+      --primary:#6c5ce7;
+      --primary-glow:rgba(108,92,231,0.3);
+      --primary-light:#a29bfe;
+      --danger:#ff6b6b;
+      --success:#00cec9;
+      --text:#e2e2f0;
+      --text-dim:#8888a0;
+      --text-bright:#fff;
+      --radius:12px;
+      --radius-sm:8px;
+      --shadow:0 8px 32px rgba(0,0,0,0.4);
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow:hidden;position:relative}
+    
+    .bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px, rgba(108,92,231,0.05) 1px, transparent 0);background-size:40px 40px;pointer-events:none;z-index:0}
+    .bg-glow{position:fixed;top:-300px;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle, rgba(108,92,231,0.1) 0%, transparent 70%);pointer-events:none;z-index:0}
+    .bg-glow-2{position:fixed;bottom:-300px;right:-200px;width:600px;height:600px;background:radial-gradient(circle, rgba(0,206,201,0.06) 0%, transparent 70%);pointer-events:none;z-index:0}
+
+    .auth-wrapper{position:relative;z-index:1;width:100%;max-width:440px}
+    
+    .auth-header{text-align:center;margin-bottom:36px}
+    .logo{font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--primary-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px}
+    .logo-sub{color:var(--text-dim);font-size:0.9rem;margin-top:6px}
+
+    .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:36px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+    .auth-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--primary-light),var(--success))}
+
+    .tabs{display:flex;gap:4px;margin-bottom:28px;background:var(--surface2);border-radius:var(--radius-sm);padding:4px}
+    .tab{flex:1;padding:10px;text-align:center;border-radius:6px;cursor:pointer;font-weight:500;font-size:0.9rem;color:var(--text-dim);transition:all 0.3s;border:none;background:none;font-family:inherit}
+    .tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 12px var(--primary-glow)}
+    .tab:hover:not(.active){color:var(--text)}
+
+    .form-group{margin-bottom:18px}
+    .form-label{display:block;font-size:0.8rem;font-weight:500;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+    .form-input{width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.95rem;outline:none;transition:all 0.3s;font-family:inherit}
+    .form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+    /* Animated Button Effects */
+    button, .submit-btn, .tab, .btn-primary, .btn-secondary {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .submit-btn::after, .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 50%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+      transform: rotate(25deg);
+      animation: btnLightRay 3.5s infinite ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes btnLightRay {
+      0% { left: -60%; opacity: 0; }
+      20% { opacity: 1; }
+      60% { left: 140%; opacity: 0; }
+      100% { left: 140%; opacity: 0; }
+    }
+    button:active, .submit-btn:active, .tab:active { transform: scale(0.96) !important; }
+
+    .submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:var(--radius-sm);font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.3s;margin-top:8px;font-family:inherit}
+    .submit-btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 25px var(--primary-glow)}
+
+    .error-msg{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);border-radius:var(--radius-sm);padding:10px 14px;color:var(--danger);font-size:0.85rem;margin-bottom:16px;display:none;animation:slideDown 0.3s}
+    .error-msg.show{display:block}
+
+    .divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--text-dim);font-size:0.8rem}
+    .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border)}
+
+    .form-footer{text-align:center;margin-top:20px;color:var(--text-dim);font-size:0.85rem}
+    .form-footer a{color:var(--primary-light);text-decoration:none;cursor:pointer}
+    .form-footer a:hover{text-decoration:underline}
+
+    .password-toggle{position:relative}
+    .password-toggle .form-input{padding-right:44px}
+    .toggle-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1.1rem;padding:4px}
+    .toggle-eye:hover{color:var(--text)}
+
+    .strength-bar{height:4px;background:var(--surface2);border-radius:2px;margin-top:8px;overflow:hidden}
+    .strength-fill{height:100%;width:0;border-radius:2px;transition:all 0.3s}
+
+    .welcome-text{color:var(--text-dim);font-size:0.85rem;margin-top:24px;text-align:center}
+    .welcome-text a{color:var(--primary-light);text-decoration:none}
+
+    @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    .hidden{display:none !important}
+
+    .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center}
+    .modal-overlay.active{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:30px;max-width:400px;width:90%;text-align:center;animation:slideUp 0.3s}
+    .modal-icon{font-size:3rem;margin-bottom:16px}
+    .modal h3{color:var(--text-bright);margin-bottom:12px}
+    .modal p{color:var(--text-dim);font-size:0.9rem;margin-bottom:20px;line-height:1.5}
+    .modal-btns{display:flex;gap:10px}
+    .modal-btns button{flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--primary-glow)}
+    .btn-secondary{background:var(--surface2);border:1px solid var(--border) !important;color:var(--text)}
+    .btn-secondary:hover{border-color:var(--primary) !important;color:var(--primary-light)}
+
+    @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+    @media(max-width:480px){
+      .auth-card{padding:24px 20px}
+      .logo{font-size:1.8rem}
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 16px;
+      background: #fff;
+      color: #3c4043;
+      border: 1px solid #dadce0;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-family: inherit;
+      margin-bottom: 4px;
+      text-decoration: none;
+    }
+    .google-btn:hover {
+      background: #f8f9fa;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+      transform: translateY(-1px);
+    }
+    .google-btn svg { flex-shrink: 0; }
+    .or-divider { display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-dim);font-size:0.8rem }
+    .or-divider::before,.or-divider::after { content:"";flex:1;height:1px;background:var(--border) }
+    .error-banner { background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.35);border-radius:var(--radius-sm);padding:10px 14px;color:#ff6b6b;font-size:0.85rem;margin-bottom:14px;display:none;text-align:center }
+    .error-banner.show { display:block }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+
+  <div class="auth-wrapper">
+    <div class="auth-header">
+      <div class="logo">Abdullah File Share</div>
+      <div class="logo-sub">Secure file sharing for everyone</div>
+    </div>
+
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+        <button class="tab" id="registerTab" onclick="switchTab('register')">Sign Up</button>
+      </div>
+
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="error-banner" id="oauthErrorBanner"></div>
+
+      <!-- Google Sign-In Button -->
+      <a href="/auth/google" class="google-btn" id="googleLoginBtn">
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Continue with Google
+      </a>
+
+      <div class="or-divider">or</div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Username or Email</label>
+          <input type="text" class="form-input" id="loginUser" placeholder="Enter username or email" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="password-toggle">
+            <input type="password" class="form-input" id="loginPass" placeholder="Enter your password" required autocomplete="current-password">
+            <button type="button" class="toggle-eye" onclick="togglePassword('loginPass', this)">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="submit-btn" id="loginBtn">Sign In</button>
+        <div style="text-align:center;margin-top:12px">
+          <a href="/forgot-password" style="color:var(--primary-light);font-size:0.85rem;text-decoration:none">Forgot password?</a>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-input" id="regUser" placeholder="Choose a username" required minlength="3" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="regEmail" placeholder="Enter your email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="password-toggle">
+            <input type="password" class="form-input" id="regPass" placeholder="Create a password" required minlength="6" oninput="checkStrength(this.value)" autocomplete="new-password">
+            <button type="button" class="toggle-eye" onclick="togglePassword('regPass', this)">👁</button>
+          </div>
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <div class="password-toggle">
+            <input type="password" class="form-input" id="regPassConfirm" placeholder="Confirm your password" required autocomplete="new-password">
+            <button type="button" class="toggle-eye" onclick="togglePassword('regPassConfirm', this)">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="submit-btn" id="regBtn">Create Account</button>
+      </form>
+
+      <div class="form-footer" id="formFooter">
+        Don't have an account? <a onclick="switchTab('register')">Sign up</a>
+      </div>
+    </div>
+
+    <div class="welcome-text">
+      <a href="/">← Back to home</a>
+    </div>
+  </div>
+
+  <!-- 2FA Setup Modal -->
+  <div class="modal-overlay" id="twofaModal">
+    <div class="modal">
+      <div class="modal-icon">🔐</div>
+      <h3>Enable Two-Factor Authentication?</h3>
+      <p>Add an extra layer of security to your account with Authenticator App. You'll need your phone to sign in.</p>
+      <div class="modal-btns">
+        <button class="btn-secondary" onclick="skip2FA()">Skip for now</button>
+        <button class="btn-primary" onclick="goTo2FASetup()">Enable 2FA</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Read ?error= and ?tab= from URL
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get('error');
+      const tab = params.get('tab');
+      const banner = document.getElementById('oauthErrorBanner');
+      const messages = {
+        google_not_configured: '⚠️ Google login is not configured yet. Please contact the admin.',
+        google_denied: '❌ Google sign-in was cancelled.',
+        google_token_failed: '❌ Failed to obtain Google token. Try again.',
+        google_profile_failed: '❌ Could not retrieve your Google profile.',
+        google_server_error: '❌ A server error occurred during Google sign-in.'
+      };
+      if (err && messages[err]) {
+        banner.textContent = messages[err];
+        banner.classList.add('show');
+      }
+      if (tab === 'register') {
+        setTimeout(() => switchTab('register'), 50);
+      }
+    })();
+
+    function switchTab(tab) {
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const loginTab = document.getElementById('loginTab');
+      const registerTab = document.getElementById('registerTab');
+      const footer = document.getElementById('formFooter');
+      const error = document.getElementById('errorMsg');
+      
+      error.classList.remove('show');
+      
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        loginTab.classList.add('active');
+        registerTab.classList.remove('active');
+        footer.innerHTML = 'Don\'t have an account? <a onclick="switchTab(\'register\')">Sign up</a>';
+      } else {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        loginTab.classList.remove('active');
+        registerTab.classList.add('active');
+        footer.innerHTML = 'Already have an account? <a onclick="switchTab(\'login\')">Sign in</a>';
+      }
+    }
+
+    function showError(msg) {
+      const error = document.getElementById('errorMsg');
+      error.textContent = msg;
+      error.classList.add('show');
+    }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🔒';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+
+    function checkStrength(password) {
+      const fill = document.getElementById('strengthFill');
+      let strength = 0;
+      if (password.length >= 6) strength++;
+      if (password.length >= 10) strength++;
+      if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
+      if (/[0-9]/.test(password)) strength++;
+      if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+      const colors = ['#ff6b6b', '#fdcb6e', '#fdcb6e', '#00cec9', '#00cec9'];
+      const widths = ['20%', '40%', '60%', '80%', '100%'];
+      
+      fill.style.width = password ? widths[Math.min(strength, 4)] : '0';
+      fill.style.background = password ? colors[Math.min(strength, 4)] : 'transparent';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            login: document.getElementById('loginUser').value,
+            password: document.getElementById('loginPass').value
+          })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          window.location.href = '/app';
+        } else {
+          showError(data.error || 'Login failed');
+        }
+      } catch (err) {
+        showError('Connection error. Please try again.');
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const password = document.getElementById('regPass').value;
+      const confirm = document.getElementById('regPassConfirm').value;
+      
+      if (password !== confirm) {
+        showError('Passwords do not match');
+        return;
+      }
+      
+      const btn = document.getElementById('regBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+      
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('regUser').value,
+            email: document.getElementById('regEmail').value,
+            password: password
+          })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          document.getElementById('twofaModal').classList.add('active');
+        } else {
+          showError(data.error || 'Registration failed');
+        }
+      } catch (err) {
+        showError('Connection error. Please try again.');
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    }
+
+    function skip2FA() {
+      document.getElementById('twofaModal').classList.remove('active');
+      window.location.href = '/app';
+    }
+
+    function goTo2FASetup() {
+      document.getElementById('twofaModal').classList.remove('active');
+      window.location.href = '/setup-2fa';
+    }
+
+    // Check if already logged in
+    (function() {
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              window.location.href = '/app';
+            }
+          })
+          .catch(() => {});
+      }
+    })();
+  </script>
+  <div class="creator-credit" style="text-align: center; margin-top: 40px; padding-bottom: 20px; color: var(--text-dim); font-size: 0.9rem; font-weight: 500; opacity: 0.8; width: 100%;">Created by Abdullah</div>
+</body>
+</html>

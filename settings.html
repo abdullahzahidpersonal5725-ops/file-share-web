@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Abdullah File Share</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0a0a12;
+      --surface:#12121a;
+      --surface2:#1a1a28;
+      --border:#2a2a3a;
+      --primary:#6c5ce7;
+      --primary-glow:rgba(108,92,231,0.3);
+      --primary-light:#a29bfe;
+      --danger:#ff6b6b;
+      --success:#00cec9;
+      --text:#e2e2f0;
+      --text-dim:#8888a0;
+      --text-bright:#fff;
+      --radius:12px;
+      --radius-sm:8px;
+      --shadow:0 8px 32px rgba(0,0,0,0.4);
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+    
+    .top-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .logo{font-size:1.2rem;font-weight:700;color:var(--text);text-decoration:none}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .nav-link{padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:500;color:var(--text-dim);text-decoration:none;transition:all 0.3s}
+    .nav-link:hover{color:var(--text);background:var(--surface2)}
+    .nav-link.active{color:var(--primary-light);background:rgba(108,92,231,0.1)}
+    
+    .logout-btn{padding:8px 16px;background:rgba(255,107,107,0.15);border:1px solid rgba(255,107,107,0.3);border-radius:8px;color:var(--danger);cursor:pointer;font-size:0.85rem;font-weight:500;transition:all 0.3s}
+    .logout-btn:hover{background:rgba(255,107,107,0.3)}
+    
+    .container{max-width:720px;margin:0 auto;padding:32px 20px 60px}
+    h1{font-size:1.8rem;font-weight:700;margin-bottom:8px}
+    .subtitle{color:var(--text-dim);font-size:0.95rem;margin-bottom:32px}
+    
+    .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+    .section-title{font-size:1.05rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .section-title .icon{font-size:1.2rem}
+    
+    .field{margin-bottom:14px}
+    .field:last-child{margin-bottom:0}
+    .field label{display:block;font-size:0.8rem;font-weight:500;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+    .field input,.field select{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;outline:none;transition:border-color 0.2s;font-family:inherit}
+    .field input:focus{border-color:var(--primary)}
+    
+    .field-row{display:flex;gap:12px}
+    .field-row .field{flex:1}
+    
+    .btn{padding:11px 22px;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 15px var(--primary-glow)}
+    .btn-danger{background:rgba(255,107,107,0.15);border:1px solid rgba(255,107,107,0.3);color:var(--danger)}
+    .btn-danger:hover{background:rgba(255,107,107,0.25)}
+    .btn-secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)}
+    .btn-secondary:hover{color:var(--text);border-color:#3a3a4a}
+    .btn-row{display:flex;gap:10px;margin-top:16px}
+    
+    .status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:0.8rem;font-weight:500}
+    .status-on{background:rgba(78,205,196,0.15);color:var(--success);border:1px solid rgba(78,205,196,0.3)}
+    .status-off{background:rgba(136,136,160,0.1);color:var(--text-dim);border:1px solid var(--border)}
+    
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+    .info-row:last-child{border-bottom:none}
+    .info-label{color:var(--text-dim);font-size:0.88rem}
+    .info-value{color:var(--text);font-size:0.9rem;font-weight:500}
+    
+    .toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:8px;font-size:0.88rem;font-weight:500;color:#fff;z-index:2000;transform:translateY(100px);opacity:0;transition:all 0.3s}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.success{background:linear-gradient(135deg,#2ecc71,#27ae60)}
+    .toast.error{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+    
+    .toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+    .toggle-wrap .lbl{font-size:0.9rem}
+    .toggle{position:relative;width:44px;height:24px;background:#22223a;border-radius:12px;cursor:pointer;border:1px solid var(--border);transition:all 0.3s;flex-shrink:0}
+    .toggle.on{background:var(--primary);border-color:var(--primary)}
+    .toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform 0.3s}
+    .toggle.on::after{transform:translateX(20px)}
+
+    @media(max-width:768px){
+      .top-bar{flex-direction:column;gap:12px;padding:12px 14px;align-items:stretch;text-align:center}
+      .top-actions{justify-content:center;flex-wrap:wrap;gap:8px}
+      .container{padding:14px}
+      .section{padding:18px;margin-bottom:16px}
+      .field-row{flex-direction:column;gap:12px}
+      .info-row{flex-direction:column;align-items:flex-start;gap:6px}
+      .btn-row{flex-direction:column;gap:10px}
+      .btn-row button{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="/app" class="logo">📁 Abdullah File Share</a>
+    <div class="top-actions">
+      <a href="/app" class="nav-link">Files</a>
+      <a href="/documents" class="nav-link">Documents</a>
+      <a href="/settings" class="nav-link active">Settings</a>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:8px">
+        <div id="userAvatar" style="width:30px;height:30px;border-radius:50%;background:#667eea;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600">U</div>
+        <span id="userName" style="font-size:0.85rem;color:#8888a0">User</span>
+      </div>
+      <button class="logout-btn" onclick="showLogoutConfirm()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Settings</h1>
+    <p class="subtitle">Manage your account and preferences</p>
+
+    <div id="onboardingBanner" style="display:none;background:linear-gradient(135deg,rgba(108,92,231,0.2),rgba(0,242,254,0.15));border:1px solid var(--primary-light);border-radius:var(--radius);padding:18px 24px;margin-bottom:24px;animation:slideDown 0.3s">
+      <h3 style="color:#fff;margin-bottom:6px;display:flex;align-items:center;gap:8px">🎉 Welcome to Abdullah Drive!</h3>
+      <p style="color:var(--text-dim);font-size:0.9rem">Please choose a custom username and set an optional account password below to finish setting up your account.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">👤</span> Account Profile</div>
+      <div class="info-row">
+        <span class="info-label">Username</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="text" id="usernameInput" style="padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#fff;font-weight:600;outline:none;font-size:0.9rem">
+          <button class="btn btn-secondary" onclick="updateUsername()" style="padding:6px 12px;font-size:0.8rem">Save Username</button>
+        </div>
+      </div>
+      <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="infoEmail">—</span></div>
+      <div class="info-row"><span class="info-label">Role</span><span class="info-value" id="infoRole">—</span></div>
+      <div class="info-row"><span class="info-label">Linked Google Account</span><span class="info-value" id="infoGoogleLink">—</span></div>
+      <div class="info-row"><span class="info-label">2FA</span><span class="info-value" id="info2FA">—</span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" id="pwSectionTitle"><span class="icon">🔒</span> Change Password</div>
+      <div class="field" id="currentPwGroup"><label>Current Password</label><input type="password" id="currentPassword" placeholder="Enter current password"></div>
+      <div class="field"><label>New Password</label><input type="password" id="newPassword" placeholder="At least 6 characters"></div>
+      <div class="field"><label>Confirm New Password</label><input type="password" id="confirmPassword" placeholder="Confirm new password"></div>
+      <div class="btn-row"><button class="btn btn-primary" id="changePwBtn" onclick="changePassword()">Update Password</button></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">🔐</span> Two-Factor Authentication</div>
+      <div id="twofaInfo"></div>
+      <div class="btn-row" id="twofaActions"></div>
+    </div>
+
+    <div class="section" id="smtpSection" style="display:none">
+      <div class="section-title"><span class="icon">📧</span> Email (SMTP) Settings</div>
+      <div class="field-row">
+        <div class="field"><label>SMTP Host</label><input type="text" id="smtpHost" placeholder="smtp.gmail.com"></div>
+        <div class="field"><label>SMTP Port</label><input type="text" id="smtpPort" placeholder="587"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>SMTP Username / Email</label><input type="email" id="smtpUser" placeholder="you@gmail.com"></div>
+        <div class="field"><label>SMTP App Password</label><input type="password" id="smtpPass" placeholder="App password or SMTP pass"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>From Name</label><input type="text" id="smtpFromName" placeholder="Abdullah File Share"></div>
+        <div class="field"><label>From Email</label><input type="email" id="smtpFromEmail" placeholder="pubgglobal35303@gmail.com"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="testSmtp()">Test Connection</button>
+        <button class="btn btn-primary" onclick="saveSmtp()">Save Email Settings</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">💻</span> Active Sessions & Devices</div>
+      <p style="color:var(--text-dim);font-size:0.88rem;margin-bottom:12px">Manage active login tokens across your browsers and devices.</p>
+      <div id="sessionsList" style="margin-bottom:14px"></div>
+      <button class="btn btn-danger" onclick="revokeOtherSessions()" style="font-size:0.8rem;padding:6px 14px">Revoke All Other Sessions</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">🎨</span> Preferences & Theme Engine</div>
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:0.85rem;color:var(--text-dim);margin-bottom:8px">Select UI Design Theme</label>
+        <select id="themeSelector" onchange="changeTheme(this.value)" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#fff;font-size:0.9rem;outline:none">
+          <option value="cyber">🌌 Cyber Obsidian (Default Dark Neon)</option>
+          <option value="midnight">🌙 Midnight Blue</option>
+          <option value="matrix">🟢 Matrix Neon Green</option>
+          <option value="light">☀️ Clean Light Mode</option>
+        </select>
+      </div>
+
+      <div class="toggle-wrap">
+        <span class="lbl">Force Mobile Responsive Layout View</span>
+        <div class="toggle" id="mobileToggle" onclick="toggleMobileView(this)"></div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="lbl">Compact file grid</span>
+        <div class="toggle" id="compactToggle" onclick="toggleCompact(this)"></div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="lbl">Show file sizes in list view</span>
+        <div class="toggle on" id="sizeToggle" onclick="this.classList.toggle('on');savePrefs()"></div>
+      </div>
+    </div>
+
+    <div class="section" style="border-color:rgba(255,107,107,0.25)">
+      <div class="section-title" style="color:#ff6b6b"><span class="icon">⚠️</span> Danger Zone</div>
+      <p style="color:#8888a0;font-size:0.88rem;margin-bottom:14px">These actions are irreversible.</p>
+      <div class="btn-row"><button class="btn btn-danger" onclick="alert('Account deletion is not yet supported.')">Delete Account</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div id="logoutModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:1001;display:none;align-items:center;justify-content:center">
+    <div style="background:#12121a;border:1px solid #2a2a3a;border-radius:12px;padding:28px;max-width:420px;width:90%">
+      <h3 style="color:#e2e2f0;margin-bottom:6px">👋 Sign Out</h3>
+      <p style="color:#8888a0;font-size:0.88rem;margin-bottom:18px">Are you sure you want to sign out?</p>
+      <div style="display:flex;gap:10px">
+        <button onclick="closeLogoutModal()" style="flex:1;padding:12px;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;background:#1a1a28;border:1px solid #2a2a3a;color:#e2e2f0">Cancel</button>
+        <button onclick="handleLogout()" style="flex:1;padding:12px;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;background:linear-gradient(135deg,#e74c3c,#ff6b6b);color:#fff">Yes, Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const authToken = localStorage.getItem('token');
+    if (!authToken) window.location.href = '/login';
+    let currentUser = null;
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type + ' show';
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function apiFetch(url, opts = {}) {
+      if (!opts.headers) opts.headers = {};
+      opts.headers['Authorization'] = 'Bearer ' + authToken;
+      opts.headers['Content-Type'] = 'application/json';
+      const res = await fetch(url, opts);
+      if (res.status === 401 || res.status === 403) { window.location.href = '/login'; return null; }
+      return res;
+    }
+
+    async function loadProfile() {
+      const res = await apiFetch('/api/auth/me');
+      if (!res) return;
+      const data = await res.json();
+      if (!data.success) { window.location.href = '/login'; return; }
+      currentUser = data.user;
+      document.getElementById('usernameInput').value = currentUser.username;
+      document.getElementById('infoEmail').textContent = currentUser.email;
+      document.getElementById('infoRole').textContent = currentUser.role === 'admin' ? 'Admin' : 'User';
+
+      // Check URL parameters for errors or onboarding
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('error') === 'google_already_linked') {
+        showToast('⚠️ This Google Account is already linked to another user account.', 'error');
+      }
+      if (urlParams.get('onboarding') === 'true' || currentUser.needsOnboarding) {
+        document.getElementById('onboardingBanner').style.display = 'block';
+        document.getElementById('usernameInput').focus();
+      }
+      
+      const hasGoogle = !!(currentUser.googleAuth || currentUser.googleId);
+      document.getElementById('infoGoogleLink').innerHTML = hasGoogle
+        ? `<div style="display:flex;align-items:center;gap:10px">
+             <span class="status-badge status-on">● Connected</span>
+             <button class="btn btn-danger" onclick="unlinkGoogleAccount()" style="padding:4px 10px;font-size:0.78rem">Unlink Google</button>
+           </div>`
+        : `<button class="btn btn-secondary" onclick="linkGoogleAccount()" style="padding:4px 12px;font-size:0.8rem">🔗 Connect Google Account</button>`;
+
+      document.getElementById('info2FA').innerHTML = currentUser.totpEnabled
+        ? '<span class="status-badge status-on">● Enabled</span>'
+        : '<span class="status-badge status-off">● Not Enabled</span>';
+      document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+      document.getElementById('userName').textContent = currentUser.username;
+      
+      // If user logged in via Google and hasn't set a password yet, hide Current Password field
+      const hasPassword = !!(currentUser.hash && currentUser.salt);
+      if (!hasPassword) {
+        document.getElementById('currentPwGroup').style.display = 'none';
+        document.getElementById('pwSectionTitle').innerHTML = '<span class="icon">🔑</span> Set Account Password (Required before unlinking Google)';
+        document.getElementById('changePwBtn').textContent = 'Set Password';
+      } else {
+        document.getElementById('currentPwGroup').style.display = 'block';
+        document.getElementById('pwSectionTitle').innerHTML = '<span class="icon">🔒</span> Change Password';
+        document.getElementById('changePwBtn').textContent = 'Update Password';
+      }
+
+      document.getElementById('smtpSection').style.display = 'block';
+      loadSmtpSettings();
+      render2FA();
+      loadPrefs();
+      loadSessions();
+    }
+
+    async function loadSessions() {
+      try {
+        const res = await apiFetch('/api/sessions');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          const list = document.getElementById('sessionsList');
+          if (!data.sessions.length) { list.innerHTML = '<p style="color:var(--text-dim);font-size:0.8rem">No sessions found</p>'; return; }
+          list.innerHTML = data.sessions.map(s => `
+            <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);padding:8px 12px;border-radius:6px;margin-bottom:6px;border:1px solid var(--border)">
+              <div>
+                <strong style="color:#fff;font-size:0.85rem">Session: ${s.token}</strong>
+                ${s.isCurrent ? '<span style="background:rgba(0,255,135,0.2);color:#00ff87;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700;margin-left:8px">● Current Device</span>' : ''}
+              </div>
+            </div>`).join('');
+        }
+      } catch (e) {}
+    }
+
+    async function revokeOtherSessions() {
+      if (!confirm('Are you sure you want to revoke all other active login sessions?')) return;
+      try {
+        const res = await apiFetch('/api/sessions/revoke', { method: 'POST' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message || 'Other sessions revoked', 'success');
+          loadSessions();
+        }
+      } catch (e) { showToast('Failed to revoke sessions', 'error'); }
+    }
+
+    async function updateUsername() {
+      const newName = document.getElementById('usernameInput').value.trim();
+      if (!newName || newName.length < 3) return showToast('Username must be at least 3 characters', 'error');
+
+      try {
+        const res = await apiFetch('/api/auth/update-username', {
+          method: 'POST',
+          body: JSON.stringify({ username: newName })
+        });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('Username updated successfully!', 'success');
+          // Update localStorage user object
+          const stored = JSON.parse(localStorage.getItem('user') || '{}');
+          stored.username = data.username;
+          localStorage.setItem('user', JSON.stringify(stored));
+          document.getElementById('userName').textContent = data.username;
+          document.getElementById('userAvatar').textContent = data.username.charAt(0).toUpperCase();
+          document.getElementById('onboardingBanner').style.display = 'none';
+        } else {
+          showToast(data.error || 'Failed to update username', 'error');
+        }
+      } catch (err) {
+        showToast('Failed to update username', 'error');
+      }
+    }
+
+    function linkGoogleAccount() {
+      const token = localStorage.getItem('token');
+      window.location.href = `/auth/google?state=link:${token}`;
+    }
+
+    async function unlinkGoogleAccount() {
+      const hasPassword = !!(currentUser.hash && currentUser.salt);
+      if (!hasPassword) {
+        alert('❌ You must set an account password first below before you can unlink your Google Account.');
+        document.getElementById('newPassword').focus();
+        return;
+      }
+
+      if (!confirm('Are you sure you want to disconnect your Google Account from your profile?')) return;
+
+      try {
+        const res = await apiFetch('/api/auth/unlink-google', { method: 'POST' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('Google account unlinked successfully', 'success');
+          loadProfile();
+        } else {
+          showToast(data.error || 'Failed to unlink Google account', 'error');
+        }
+      } catch (err) {
+        showToast('Failed to unlink Google account', 'error');
+      }
+    }
+
+    async function changePassword() {
+      const cur = document.getElementById('currentPassword').value;
+      const nw = document.getElementById('newPassword').value;
+      const conf = document.getElementById('confirmPassword').value;
+      
+      if (!currentUser.isGoogleUser && !cur) return showToast('Enter your current password', 'error');
+      if (!nw || !conf) return showToast('Fill in all password fields', 'error');
+      if (nw !== conf) return showToast('New passwords do not match', 'error');
+      if (nw.length < 6) return showToast('Password must be at least 6 characters', 'error');
+      
+      const btn = document.getElementById('changePwBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Saving...';
+      
+      const res = await apiFetch('/api/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword: cur, newPassword: nw })
+      });
+      
+      btn.disabled = false;
+      btn.textContent = currentUser.isGoogleUser ? 'Set Password' : 'Update Password';
+      
+      if (!res) return;
+      const data = await res.json();
+      if (data.success) {
+        showToast(currentUser.isGoogleUser ? 'Password set successfully! You can now log in via password or Google.' : 'Password updated successfully', 'success');
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        loadProfile();
+      } else {
+        showToast(data.error || 'Failed to update password', 'error');
+      }
+    }
+
+    async function render2FA() {
+      const info = document.getElementById('twofaInfo');
+      const actions = document.getElementById('twofaActions');
+      if (currentUser.totpEnabled) {
+        info.innerHTML = '<p style="color:#4ecdc4;font-size:0.9rem;margin-bottom:8px">✓ Two-factor authentication is enabled for your account.</p><p style="color:#8888a0;font-size:0.82rem">Your account is protected with Authenticator App.</p>';
+        actions.innerHTML = '<button class="btn btn-danger" onclick="disable2FA()">Disable 2FA</button>';
+      } else {
+        info.innerHTML = '<p style="color:#8888a0;font-size:0.9rem;margin-bottom:8px">Two-factor authentication is not enabled.</p><p style="color:#5a5a70;font-size:0.82rem">Add an extra layer of security to your account with Authenticator App.</p>';
+        actions.innerHTML = '<a href="/setup-2fa" style="text-decoration:none"><button class="btn btn-primary">Enable 2FA</button></a>';
+      }
+    }
+
+    async function disable2FA() {
+      const password = prompt('Enter your password to confirm disabling 2FA:');
+      const totp = prompt('Enter your current 2FA code:');
+      if (!password || !totp) return;
+      const res = await apiFetch('/api/2fa/disable', {
+        method: 'POST',
+        body: JSON.stringify({ password, token: totp })
+      });
+      if (!res) return;
+      const data = await res.json();
+      if (data.success) {
+        showToast('2FA disabled', 'success');
+        currentUser.totpEnabled = false;
+        document.getElementById('info2FA').innerHTML = '<span class="status-badge status-off">● Not Enabled</span>';
+        render2FA();
+      } else {
+        showToast(data.error || 'Failed to disable 2FA', 'error');
+      }
+    }
+
+    async function loadSmtpSettings() {
+      const res = await apiFetch('/api/smtp-settings');
+      if (!res) return;
+      const data = await res.json();
+      if (data.config) {
+        const s = data.config;
+        document.getElementById('smtpHost').value = s.host || 'smtp.gmail.com';
+        document.getElementById('smtpPort').value = s.port || '587';
+        document.getElementById('smtpUser').value = s.user || '';
+        document.getElementById('smtpPass').value = s.pass || '';
+        document.getElementById('smtpFromName').value = s.fromName || 'Abdullah File Share';
+        document.getElementById('smtpFromEmail').value = s.fromEmail || '';
+      }
+    }
+
+    async function saveSmtp() {
+      const body = {
+        host: document.getElementById('smtpHost').value.trim(),
+        port: document.getElementById('smtpPort').value.trim(),
+        user: document.getElementById('smtpUser').value.trim(),
+        pass: document.getElementById('smtpPass').value,
+        fromName: document.getElementById('smtpFromName').value.trim(),
+        fromEmail: document.getElementById('smtpFromEmail').value.trim()
+      };
+      const res = await apiFetch('/api/smtp-settings', { method: 'PUT', body: JSON.stringify(body) });
+      if (!res) return;
+      const data = await res.json();
+      showToast(data.success ? 'Email settings saved' : (data.error || 'Failed to save'), data.success ? 'success' : 'error');
+    }
+
+    async function testSmtp() {
+      const target = prompt('Enter recipient email address for test message (leave blank to use account email):');
+      if (target === null) return;
+      showToast('Testing SMTP connection...', 'success');
+      const res = await apiFetch('/api/smtp-test', { method: 'POST', body: JSON.stringify({ to: target }) });
+      if (!res) return;
+      const data = await res.json();
+      showToast(data.success ? '✓ SMTP Test Successful! Email sent.' : (data.error || 'SMTP Connection failed'), data.success ? 'success' : 'error');
+    }
+
+    function loadPrefs() {
+      const prefs = JSON.parse(localStorage.getItem('settingsPrefs') || '{}');
+      if (prefs.compact) document.getElementById('compactToggle').classList.add('on');
+      if (prefs.showSizes === false) document.getElementById('sizeToggle').classList.remove('on');
+      if (prefs.theme) {
+        document.getElementById('themeSelector').value = prefs.theme;
+        applyTheme(prefs.theme);
+      }
+    }
+
+    function changeTheme(themeName) {
+      applyTheme(themeName);
+      savePrefs();
+    }
+
+    function applyTheme(themeName) {
+      localStorage.setItem('userTheme', themeName);
+      if (themeName === 'light') {
+        document.documentElement.style.setProperty('--bg', '#f4f5f7');
+        document.documentElement.style.setProperty('--surface', '#ffffff');
+        document.documentElement.style.setProperty('--surface2', '#ebecf0');
+        document.documentElement.style.setProperty('--border', '#dcdfe6');
+        document.documentElement.style.setProperty('--text', '#172b4d');
+        document.documentElement.style.setProperty('--text-dim', '#5e6c84');
+        document.documentElement.style.setProperty('--text-bright', '#091e42');
+      } else if (themeName === 'midnight') {
+        document.documentElement.style.setProperty('--bg', '#0b132b');
+        document.documentElement.style.setProperty('--surface', '#1c2541');
+        document.documentElement.style.setProperty('--surface2', '#3a506b');
+        document.documentElement.style.setProperty('--border', '#2c3d55');
+        document.documentElement.style.setProperty('--text', '#e0e6ed');
+        document.documentElement.style.setProperty('--text-dim', '#8da9c4');
+        document.documentElement.style.setProperty('--text-bright', '#ffffff');
+      } else if (themeName === 'matrix') {
+        document.documentElement.style.setProperty('--bg', '#03120e');
+        document.documentElement.style.setProperty('--surface', '#07241c');
+        document.documentElement.style.setProperty('--surface2', '#0c382b');
+        document.documentElement.style.setProperty('--border', '#145c47');
+        document.documentElement.style.setProperty('--primary', '#00ff87');
+        document.documentElement.style.setProperty('--primary-light', '#60ffa8');
+        document.documentElement.style.setProperty('--text', '#d8ffe8');
+        document.documentElement.style.setProperty('--text-dim', '#56b37e');
+        document.documentElement.style.setProperty('--text-bright', '#ffffff');
+      } else {
+        document.documentElement.style.removeProperty('--bg');
+        document.documentElement.style.removeProperty('--surface');
+        document.documentElement.style.removeProperty('--surface2');
+        document.documentElement.style.removeProperty('--border');
+        document.documentElement.style.removeProperty('--primary');
+        document.documentElement.style.removeProperty('--primary-light');
+        document.documentElement.style.removeProperty('--text');
+        document.documentElement.style.removeProperty('--text-dim');
+        document.documentElement.style.removeProperty('--text-bright');
+      }
+    }
+
+    function toggleCompact(el) {
+      el.classList.toggle('on');
+      savePrefs();
+    }
+
+    function toggleMobileView(el) {
+      el.classList.toggle('on');
+      const forceMobile = el.classList.contains('on');
+      if (forceMobile) {
+        document.body.classList.add('force-mobile-view');
+        localStorage.setItem('forceMobileView', 'true');
+      } else {
+        document.body.classList.remove('force-mobile-view');
+        localStorage.removeItem('forceMobileView');
+      }
+      savePrefs();
+    }
+
+    function savePrefs() {
+      const prefs = {
+        compact: document.getElementById('compactToggle').classList.contains('on'),
+        showSizes: document.getElementById('sizeToggle').classList.contains('on'),
+        mobileView: document.getElementById('mobileToggle').classList.contains('on'),
+        theme: document.getElementById('themeSelector').value
+      };
+      localStorage.setItem('settingsPrefs', JSON.stringify(prefs));
+      showToast('Preferences saved', 'success');
+    }
+
+    function showLogoutConfirm() { document.getElementById('logoutModal').style.display = 'flex'; }
+    function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
+    async function handleLogout() {
+      try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + authToken } }); } catch (e) {}
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+
+    loadProfile();
+  </script>
+  <div class="creator-credit" style="text-align: center; margin-top: 40px; padding-bottom: 20px; color: var(--text-dim); font-size: 0.9rem; font-weight: 500; opacity: 0.8; width: 100%;">Created by Abdullah</div>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Abdullah Drive</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0a0a0f;
+      --surface:#12121a;
+      --surface2:#1a1a28;
+      --border:#2a2a3a;
+      --primary:#6c5ce7;
+      --primary-glow:rgba(108,92,231,0.3);
+      --primary-light:#a29bfe;
+      --danger:#ff6b6b;
+      --success:#00cec9;
+      --warning:#fdcb6e;
+      --text:#e2e2f0;
+      --text-dim:#8888a0;
+      --text-bright:#fff;
+      --radius:12px;
+      --radius-sm:8px;
+      --shadow:0 8px 32px rgba(0,0,0,0.4);
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative}
+    .bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px,rgba(108,92,231,0.05) 1px,transparent 0);background-size:40px 40px;pointer-events:none;z-index:0}
+    .bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(108,92,231,0.1) 0%,transparent 70%);pointer-events:none;z-index:0}
+    .container{max-width:1200px;margin:0 auto;padding:24px;position:relative;z-index:1}
+
+    .top-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:28px;box-shadow:var(--shadow)}
+    .logo{font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--primary-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .admin-title{color:var(--warning);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-left:8px;background:rgba(253,203,110,0.15);padding:2px 8px;border-radius:10px}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .back-btn{padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-size:0.85rem;font-weight:500;text-decoration:none;transition:all 0.3s}
+    .back-btn:hover{border-color:var(--primary);color:var(--primary-light)}
+    .logout-btn{padding:8px 16px;background:rgba(255,107,107,0.15);border:1px solid rgba(255,107,107,0.3);border-radius:var(--radius-sm);color:var(--danger);cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.3s}
+    .logout-btn:hover{background:rgba(255,107,107,0.3)}
+
+    .tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--surface2);border-radius:var(--radius-sm);padding:4px}
+    .tab{flex:1;padding:10px;text-align:center;border-radius:6px;cursor:pointer;font-weight:500;font-size:0.9rem;color:var(--text-dim);transition:all 0.3s;border:none;background:none;font-family:inherit}
+    .tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 12px var(--primary-glow)}
+    .tab:hover:not(.active){color:var(--text)}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px;text-align:center;transition:all 0.3s;box-shadow:var(--shadow)}
+    .stat-card:hover{border-color:var(--primary);transform:translateY(-2px)}
+    .stat-value{font-size:1.8rem;font-weight:700;color:var(--primary-light)}
+    .stat-label{font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:4px;font-weight:600}
+
+    .panel{display:none}
+    .panel.active{display:block}
+
+    .users-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface2);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .users-table th{background:rgba(10,10,18,0.8);padding:16px 20px;text-align:left;font-size:0.82rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-weight:700}
+    .users-table td{padding:16px 20px;border-bottom:1px solid var(--border);font-size:0.92rem;font-weight:500}
+    .users-table tr:last-child td{border-bottom:none}
+    .users-table tr:hover td{background:rgba(0,223,216,0.04)}
+
+    .role-badge{padding:4px 12px;border-radius:12px;font-size:0.75rem;font-weight:700;text-transform:uppercase}
+    .role-admin{background:rgba(255,210,0,0.15);color:var(--warning);border:1px solid rgba(255,210,0,0.3)}
+    .role-user{background:rgba(0,223,216,0.15);color:var(--accent-cyan);border:1px solid rgba(0,223,216,0.3)}
+
+    .delete-user-btn{padding:7px 14px;background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.3);border-radius:var(--radius-sm);color:var(--danger);cursor:pointer;font-size:0.82rem;font-weight:700;transition:all 0.25s;font-family:inherit}
+    .delete-user-btn:hover{background:var(--danger);color:#fff}
+    .delete-user-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+    .files-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+    .file-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all 0.3s}
+    .file-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow)}
+    .file-icon{font-size:2rem;margin-bottom:10px;display:block}
+    .file-name{font-weight:600;font-size:0.95rem;color:var(--text-bright);margin-bottom:4px;word-break:break-word}
+    .file-owner{font-size:0.8rem;color:var(--warning);margin-bottom:8px}
+    .file-meta{display:flex;gap:12px;color:var(--text-dim);font-size:0.8rem;margin-bottom:12px;flex-wrap:wrap}
+    .file-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .file-actions button{flex:1;padding:7px 10px;border:none;border-radius:var(--radius-sm);font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;min-width:50px}
+    .btn-download{background:var(--primary);color:#fff}
+    .btn-download:hover{background:var(--primary-light)}
+    .btn-delete{background:rgba(255,107,107,0.15);color:var(--danger)}
+    .btn-delete:hover{background:rgba(255,107,107,0.3)}
+
+    .empty-state{text-align:center;padding:60px 20px;color:var(--text-dim)}
+    .empty-icon{font-size:3rem;margin-bottom:12px;display:block;opacity:0.5}
+
+    .search-bar{margin-bottom:20px}
+    .search-bar input{width:100%;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:0.95rem;outline:none;transition:border-color 0.3s}
+    .search-bar input:focus{border-color:var(--primary)}
+
+    .toast{position:fixed;bottom:30px;right:30px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 24px;color:var(--text);font-size:0.9rem;z-index:2000;animation:slideIn 0.3s ease;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
+    .toast.success{border-color:var(--success)}
+    .toast.error{border-color:var(--danger)}
+
+    @keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:768px){
+      .top-bar{flex-direction:column;gap:12px;text-align:center;align-items:stretch}
+      .top-actions{justify-content:center;gap:8px}
+      .tabs{flex-wrap:wrap;gap:6px}
+      .tab{font-size:0.8rem;padding:8px 12px}
+      .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+      .files-grid{grid-template-columns:1fr;gap:12px}
+      .users-table-wrap{overflow-x:auto}
+      .users-table{font-size:0.8rem;min-width:550px}
+      .container{padding:14px}
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+  <div class="container">
+    <div class="top-bar">
+      <div style="display:flex;align-items:center">
+        <div class="logo">Abdullah File Share</div>
+        <span class="admin-title">Admin Panel</span>
+      </div>
+      <div class="top-actions">
+        <a href="/app" class="back-btn">Back to Files</a>
+        <button class="logout-btn" onclick="openLogoutModal()">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="statUsers">0</div><div class="stat-label">Total Users</div></div>
+      <div class="stat-card"><div class="stat-value" id="statFiles">0</div><div class="stat-label">Total Files</div></div>
+      <div class="stat-card"><div class="stat-value" id="statSize">0 B</div><div class="stat-label">Total Size</div></div>
+      <div class="stat-card"><div class="stat-value" id="statDownloads">0</div><div class="stat-label">Downloads</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('users')">Users</button>
+      <button class="tab" onclick="switchTab('files')">All Files</button>
+      <button class="tab" onclick="switchTab('auditLogs')">🛡️ Audit Logs</button>
+      <button class="tab" onclick="switchTab('googleOAuth')">🔑 Google OAuth</button>
+    </div>
+
+    <div class="panel active" id="usersPanel">
+      <div class="search-bar"><input type="text" id="userSearch" placeholder="Search users..." oninput="filterUsers()"></div>
+      <table class="users-table">
+        <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Login Method</th><th>Files</th><th>Joined</th><th>Action</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+      <div class="empty-state" id="noUsers" style="display:none"><span class="empty-icon">👥</span>No users found</div>
+    </div>
+
+    <div class="panel" id="filesPanel">
+      <div class="search-bar"><input type="text" id="fileSearch" placeholder="Search files..." oninput="filterFiles()"></div>
+      <div class="files-grid" id="filesGrid"></div>
+      <div class="empty-state" id="noFiles" style="display:none"><span class="empty-icon">📭</span>No files found</div>
+    </div>
+
+    <div class="panel" id="auditLogsPanel">
+      <h3 style="color:#fff;margin-bottom:16px">🛡️ System Security Audit Logs</h3>
+      <table class="users-table">
+        <thead><tr><th>Timestamp</th><th>User ID</th><th>Action</th><th>IP Address</th><th>Details</th></tr></thead>
+        <tbody id="auditLogsBody"></tbody>
+      </table>
+      <div class="empty-state" id="noAuditLogs" style="display:none"><span class="empty-icon">📜</span>No security logs recorded yet</div>
+    </div>
+
+    <div class="panel" id="googleOAuthPanel">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:600px;margin:0 auto">
+        <h3 style="color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px">🔑 Google OAuth 2.0 Credentials</h3>
+        <p style="color:var(--text-dim);font-size:0.88rem;margin-bottom:20px;line-height:1.5">
+          Configure your Google Cloud App Client ID & Secret to enable <strong>Sign in with Google</strong>.
+        </p>
+
+        <form onsubmit="saveGoogleOAuthSettings(event)">
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Client ID</label>
+            <input type="text" id="oauthClientId" placeholder="e.g. 123456789-abc.apps.googleusercontent.com" style="width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:#fff;font-size:0.9rem;outline:none">
+          </div>
+
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Client Secret</label>
+            <input type="password" id="oauthClientSecret" placeholder="Paste your Google Client Secret" style="width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:#fff;font-size:0.9rem;outline:none">
+          </div>
+
+          <div style="margin-bottom:20px">
+            <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Authorized Redirect URI</label>
+            <input type="text" id="oauthRedirectUri" readonly style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--primary-light);font-size:0.85rem;outline:none">
+            <span style="font-size:0.78rem;color:var(--text-dim);margin-top:4px;display:block">Add this URI in your Google Cloud Console under Authorized Redirect URIs.</span>
+          </div>
+
+          <button type="submit" id="saveOAuthBtn" style="padding:12px 24px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;width:100%">
+            Save Google Credentials
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:1001;display:none;align-items:center;justify-content:center" id="logoutModal">
+    <div style="background:#12121a;border:1px solid #2a2a3a;border-radius:12px;padding:28px;max-width:420px;width:90%">
+      <h3 style="color:#fff;margin-bottom:6px">👋 Sign Out</h3>
+      <p style="color:#8888a0;font-size:0.85rem;margin-bottom:18px">Are you sure you want to sign out?</p>
+      <div style="display:flex;gap:10px">
+        <button onclick="closeLogoutModal()" style="flex:1;padding:12px;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;background:#1a1a28;border:1px solid #2a2a3a;color:#e2e2f0">Cancel</button>
+        <button onclick="handleLogout()" style="flex:1;padding:12px;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;background:linear-gradient(135deg,#e74c3c,#ff6b6b);color:#fff">Yes, Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let authToken = localStorage.getItem('token');
+    let allUsers = [];
+    let allFiles = [];
+
+    async function apiFetch(url, options = {}) {
+      if (!options.headers) options.headers = {};
+      options.headers['Authorization'] = 'Bearer ' + authToken;
+      const res = await fetch(url, options);
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = '/login';
+        return null;
+      }
+      return res;
+    }
+
+    async function checkAuth() {
+      if (!authToken) { window.location.href = '/login'; return; }
+      try {
+        const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        const data = await res.json();
+        if (!data.success || data.user.role !== 'admin') {
+          window.location.href = '/app';
+          return;
+        }
+      } catch (err) { window.location.href = '/login'; }
+    }
+
+    function openLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function handleLogout() {
+      try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + authToken } }); } catch (err) {}
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (tab === 'users' && i === 0) || (tab === 'files' && i === 1) || (tab === 'auditLogs' && i === 2) || (tab === 'googleOAuth' && i === 3));
+      });
+      document.getElementById('usersPanel').classList.toggle('active', tab === 'users');
+      document.getElementById('filesPanel').classList.toggle('active', tab === 'files');
+      document.getElementById('auditLogsPanel').classList.toggle('active', tab === 'auditLogs');
+      document.getElementById('googleOAuthPanel').classList.toggle('active', tab === 'googleOAuth');
+      if (tab === 'googleOAuth') loadGoogleOAuthSettings();
+      if (tab === 'auditLogs') loadAuditLogs();
+    }
+
+    async function loadAuditLogs() {
+      try {
+        const res = await apiFetch('/api/admin/audit-logs');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          renderAuditLogs(data.logs || []);
+        }
+      } catch (e) {
+        showToast('Failed to load audit logs', 'error');
+      }
+    }
+
+    function renderAuditLogs(logs) {
+      const tbody = document.getElementById('auditLogsBody');
+      const empty = document.getElementById('noAuditLogs');
+      if (!logs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td><small style="color:var(--text-dim)">${new Date(l.timestamp).toLocaleString()}</small></td>
+          <td><code>${escapeHtml(l.userId)}</code></td>
+          <td><strong style="color:var(--neon-cyan)">${escapeHtml(l.action)}</strong></td>
+          <td><code>${escapeHtml(l.ip)}</code></td>
+          <td><small>${escapeHtml(JSON.stringify(l.details || {}))}</small></td>
+        </tr>`).join('');
+    }
+
+    async function loadGoogleOAuthSettings() {
+      try {
+        const res = await apiFetch('/api/admin/google-oauth');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('oauthClientId').value = data.clientId || '';
+          document.getElementById('oauthClientSecret').value = data.clientSecret || '';
+          document.getElementById('oauthRedirectUri').value = data.redirectUri || (window.location.origin + '/auth/google/callback');
+        }
+      } catch (err) {
+        showToast('Failed to load Google OAuth settings', 'error');
+      }
+    }
+
+    async function saveGoogleOAuthSettings(e) {
+      e.preventDefault();
+      const clientId = document.getElementById('oauthClientId').value.trim();
+      const clientSecret = document.getElementById('oauthClientSecret').value.trim();
+      const redirectUri = document.getElementById('oauthRedirectUri').value.trim();
+      const btn = document.getElementById('saveOAuthBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const res = await apiFetch('/api/admin/google-oauth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientId, clientSecret, redirectUri })
+        });
+        btn.disabled = false;
+        btn.textContent = 'Save Google Credentials';
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('Google OAuth settings saved successfully!', 'success');
+        } else {
+          showToast(data.error || 'Failed to save settings', 'error');
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Save Google Credentials';
+        showToast('Failed to save settings', 'error');
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await apiFetch('/api/admin/stats');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('statUsers').textContent = data.stats.totalUsers;
+          document.getElementById('statFiles').textContent = data.stats.totalFiles;
+          document.getElementById('statSize').textContent = formatSize(data.stats.totalSize);
+          document.getElementById('statDownloads').textContent = data.stats.totalDownloads;
+        }
+      } catch (err) {}
+    }
+
+    async function loadUsers() {
+      try {
+        const res = await apiFetch('/api/admin/users');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          allUsers = data.users;
+          renderUsers(allUsers);
+        }
+      } catch (err) {}
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersBody');
+      const empty = document.getElementById('noUsers');
+      if (!users.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+
+      tbody.innerHTML = users.map(u => {
+        const isGoogle = u.authMethod === 'Google Login';
+        const methodBadge = isGoogle 
+          ? `<span style="background:rgba(66,133,244,0.15);color:#4285f4;border:1px solid rgba(66,133,244,0.3);padding:2px 8px;border-radius:12px;font-size:0.78rem;font-weight:600">🌐 Google</span>`
+          : `<span style="background:rgba(108,92,231,0.15);color:#a29bfe;border:1px solid rgba(108,92,231,0.3);padding:2px 8px;border-radius:12px;font-size:0.78rem;font-weight:600">🔑 Standard</span>`;
+
+        return `
+        <tr>
+          <td><strong>${escapeHtml(u.username)}</strong></td>
+          <td>${escapeHtml(u.email)}</td>
+          <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+          <td>${methodBadge}</td>
+          <td>${u.fileCount}</td>
+          <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+          <td>${u.role !== 'admin' ? `<button class="delete-user-btn" onclick="deleteUser('${u.id}','${escapeHtml(u.username)}')">Delete</button>` : '<span style="color:var(--text-dim);font-size:0.8rem">Protected</span>'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('userSearch').value.toLowerCase();
+      const filtered = allUsers.filter(u => u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+      renderUsers(filtered);
+    }
+
+    async function deleteUser(id, username) {
+      if (!confirm(`Delete user "${username}" and all their files?`)) return;
+      try {
+        const res = await apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('User deleted', 'success');
+          loadUsers();
+          loadStats();
+        } else {
+          showToast(data.error || 'Failed to delete user', 'error');
+        }
+      } catch (err) { showToast('Failed to delete user', 'error'); }
+    }
+
+    async function loadFiles() {
+      try {
+        const res = await apiFetch('/api/admin/all-files');
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          allFiles = data.files;
+          renderFiles(allFiles);
+        }
+      } catch (err) {}
+    }
+
+    function renderFiles(files) {
+      const grid = document.getElementById('filesGrid');
+      const empty = document.getElementById('noFiles');
+      if (!files.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+
+      grid.innerHTML = files.map(f => `
+        <div class="file-card">
+          <span class="file-icon">${getFileIcon(f.originalName)}</span>
+          <div class="file-name">${escapeHtml(f.originalName)}</div>
+          <div class="file-owner">Uploaded by: ${escapeHtml(f.uploadedBy || 'Unknown')}</div>
+          <div class="file-meta">
+            <span>${formatSize(f.size)}</span>
+            <span>${formatDate(f.uploadDate)}</span>
+            <span>${f.downloads || 0} downloads</span>
+          </div>
+          <div class="file-actions">
+            <button class="btn-download" onclick="downloadFile('${f.id}')">Download</button>
+            <button class="btn-delete" onclick="deleteFile('${f.id}')">Delete</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function filterFiles() {
+      const q = document.getElementById('fileSearch').value.toLowerCase();
+      const filtered = allFiles.filter(f => f.originalName.toLowerCase().includes(q) || (f.uploadedBy || '').toLowerCase().includes(q));
+      renderFiles(filtered);
+    }
+
+    function getFileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      const icons = {pdf:'📄',doc:'📝',docx:'📝',txt:'📃',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',mp4:'🎬',mp3:'🎵',zip:'📦',rar:'📦',js:'💻',py:'💻'};
+      return icons[ext] || '📎';
+    }
+
+    function formatSize(bytes) {
+      if (!bytes) return '0 B';
+      const units = ['B','KB','MB','GB','TB'];
+      let i = 0;
+      while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+      return bytes.toFixed(i ? 1 : 0) + ' ' + units[i];
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      const diff = Date.now() - d;
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+      if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+      return d.toLocaleDateString();
+    }
+
+    function escapeHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    async function downloadFile(id) {
+      try {
+        const res = await apiFetch(`/api/download/${id}`);
+        if (!res) return;
+        const blob = await res.blob();
+        const file = allFiles.find(f => f.id === id);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file ? file.originalName : 'download';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) { showToast('Download failed', 'error'); }
+    }
+
+    async function deleteFile(id) {
+      if (!confirm('Delete this file permanently?')) return;
+      try {
+        const res = await apiFetch(`/api/files/${id}/permanent`, { method: 'DELETE' });
+        if (!res) return;
+        const data = await res.json();
+        if (data.success) {
+          showToast('File deleted', 'success');
+          loadFiles();
+          loadStats();
+        } else {
+          showToast('Failed to delete file', 'error');
+        }
+      } catch (err) { showToast('Failed to delete file', 'error'); }
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `${type === 'success' ? '✓' : '✕'} ${message}`;
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    checkAuth().then(() => { loadStats(); loadUsers(); loadFiles(); });
+  </script>
+  <div class="creator-credit" style="text-align: center; margin-top: 40px; padding-bottom: 20px; color: var(--text-dim); font-size: 0.9rem; font-weight: 500; opacity: 0.8; width: 100%;">Created by Abdullah</div>
+</body>
+</html>

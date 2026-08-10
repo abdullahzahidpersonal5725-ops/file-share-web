@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abdullah Drive — Cloud Storage & Docs Workspace</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0a0a0f;
+      --surface:#12121a;
+      --surface-card:#1a1a28;
+      --border:#2a2a3a;
+      --primary:#6c5ce7;
+      --primary-glow:rgba(108,92,231,0.3);
+      --primary-light:#a29bfe;
+      --danger:#ff6b6b;
+      --success:#00cec9;
+      --warning:#fdcb6e;
+      --text:#e2e2f0;
+      --text-dim:#8888a0;
+      --text-bright:#ffffff;
+      --radius:14px;
+      --radius-sm:8px;
+      --shadow:0 8px 32px rgba(0,0,0,0.4);
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative}
+
+    /* Background Elements */
+    .bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px, rgba(108,92,231,0.05) 1px, transparent 0);background-size:40px 40px;pointer-events:none;z-index:0}
+    .bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle, rgba(108,92,231,0.1) 0%, transparent 70%);pointer-events:none;z-index:0}
+
+    /* Navigation Bar */
+    .nav-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+    .brand-wrap{display:flex;align-items:center;gap:14px;text-decoration:none}
+    .brand-logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;box-shadow:0 4px 16px var(--primary-glow)}
+    .brand-name{font-size:1.5rem;font-weight:700;letter-spacing:-0.5px;color:var(--text-bright)}
+
+    .nav-links{display:flex;align-items:center;gap:16px}
+    .nav-item{padding:11px 22px;background:rgba(25, 25, 45, 0.7);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);text-decoration:none;font-size:0.95rem;font-weight:700;transition:all 0.3s;backdrop-filter:blur(12px)}
+    .nav-item:hover{border-color:var(--neon-cyan);color:var(--neon-cyan);box-shadow:0 0 20px rgba(0,240,255,0.3);transform:translateY(-2px)}
+    .btn-launch{padding:12px 28px;background:linear-gradient(135deg,var(--neon-magenta),var(--neon-purple),var(--neon-cyan));background-size:200% 200%;animation:gradMove 4s infinite alternate;color:#fff;border:none;border-radius:var(--radius-sm);font-size:1rem;font-weight:900;cursor:pointer;text-decoration:none;box-shadow:var(--shadow-neon);transition:all 0.3s;display:inline-flex;align-items:center;gap:8px}
+    .btn-launch:hover{transform:scale(1.05);box-shadow:0 0 45px rgba(0,240,255,0.6)}
+
+    @keyframes gradMove{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+
+    /* Hero Section */
+    .hero-section{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:90px 24px 70px;text-align:center}
+    .hero-badge{display:inline-flex;align-items:center;gap:10px;padding:8px 20px;background:rgba(255,0,127,0.12);border:1px solid rgba(255,0,127,0.3);border-radius:30px;font-size:0.88rem;font-weight:800;font-family:var(--font-code);color:var(--neon-magenta);margin-bottom:32px;box-shadow:0 0 25px rgba(255,0,127,0.25)}
+    .hero-title{font-size:4.2rem;font-weight:900;line-height:1.15;letter-spacing:-1.5px;margin-bottom:24px;color:var(--text-bright)}
+    .hero-title span{background:linear-gradient(135deg,var(--neon-cyan) 10%,var(--neon-magenta) 60%,var(--neon-yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero-subtitle{font-size:1.35rem;color:var(--text-dim);max-width:760px;margin:0 auto 48px;line-height:1.7;font-weight:500}
+
+    .hero-actions{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
+    .btn-hero-primary, .btn-hero-secondary, .btn-launch, .nav-item {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-hero-primary::after, .btn-launch::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 50%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+      transform: rotate(25deg);
+      animation: btnLightRay 3.5s infinite ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes btnLightRay {
+      0% { left: -60%; opacity: 0; }
+      20% { opacity: 1; }
+      60% { left: 140%; opacity: 0; }
+      100% { left: 140%; opacity: 0; }
+    }
+    .btn-hero-primary:active, .btn-hero-secondary:active, .btn-launch:active { transform: scale(0.96) !important; }
+
+    .btn-hero-primary{padding:18px 42px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-radius:var(--radius);font-size:1.15rem;font-weight:700;text-decoration:none;box-shadow:0 4px 20px var(--primary-glow);display:inline-flex;align-items:center;gap:12px}
+    .btn-hero-primary:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 8px 30px var(--primary-glow)}
+
+    .btn-hero-secondary{padding:18px 36px;background:var(--surface-card);border:1px solid var(--border);color:var(--text-bright);border-radius:var(--radius);font-size:1.1rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:10px}
+    .btn-hero-secondary:hover{border-color:var(--primary);color:var(--primary-light);transform:translateY(-3px)}
+
+    /* Features Grid */
+    .features-section{position:relative;z-index:1;max-width:1240px;margin:40px auto 100px;padding:0 24px}
+    .section-title{text-align:center;font-size:2.4rem;font-weight:900;margin-bottom:16px;color:var(--text-bright)}
+    .section-subtitle{text-align:center;color:var(--text-dim);font-size:1.1rem;margin-bottom:60px;font-weight:500}
+
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:28px}
+    .feature-card{background:var(--surface-card);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px 32px;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 15px 45px rgba(0,0,0,0.6);position:relative;overflow:hidden}
+    .feature-card:hover{border-color:var(--neon-cyan);transform:translateY(-8px) scale(1.02);box-shadow:0 25px 60px rgba(0,240,255,0.25)}
+    .feature-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--neon-cyan),var(--neon-magenta),var(--neon-lime))}
+
+    .feature-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,rgba(255,0,127,0.3),rgba(0,240,255,0.3));color:var(--neon-cyan);display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:24px;border:1px solid rgba(0,240,255,0.4);box-shadow:0 0 25px rgba(0,240,255,0.25)}
+    .feature-title{font-size:1.4rem;font-weight:900;color:var(--text-bright);margin-bottom:12px}
+    .feature-desc{color:var(--text-dim);font-size:1rem;line-height:1.7;font-weight:500}
+
+    /* Footer */
+    footer{position:relative;z-index:1;text-align:center;padding:40px 24px;border-top:1px solid var(--border);background:rgba(8,8,16,0.9);backdrop-filter:blur(25px);color:var(--text-dim);font-size:0.95rem;font-weight:600}
+    footer a{color:var(--neon-cyan);text-decoration:none;font-weight:800}
+
+    @media(max-width:768px){
+      .nav-bar{flex-direction:column;gap:14px;padding:14px 16px;align-items:stretch;text-align:center}
+      .brand-wrap{justify-content:center}
+      .nav-links{flex-wrap:wrap;justify-content:center;gap:8px}
+      .nav-item{font-size:0.85rem;padding:8px 12px}
+      .btn-launch{font-size:0.85rem;padding:8px 14px}
+      .hero-section{padding:40px 16px}
+      .hero-title{font-size:2.2rem;line-height:1.2}
+      .hero-subtitle{font-size:0.95rem;margin-bottom:28px}
+      .hero-actions{flex-direction:column;gap:12px;width:100%}
+      .btn-hero-primary, .btn-hero-secondary{width:100%;justify-content:center;padding:14px 20px;font-size:1rem}
+      .features-section{padding:0 16px;margin:20px auto 60px}
+      .section-title{font-size:1.8rem}
+      .section-subtitle{font-size:0.95rem;margin-bottom:30px}
+      .features-grid{grid-template-columns:1fr;gap:16px}
+      .feature-card{padding:24px 20px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Hyper Aurora Backdrop -->
+  <div class="hyper-backdrop">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav class="nav-bar">
+    <a href="/" class="brand-wrap">
+      <div class="brand-logo-icon">⚡</div>
+      <span class="brand-name">Abdullah Drive</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="/documents" class="nav-item">📄 Docs Workspace</a>
+      <a href="/app" class="nav-item">📁 Files Storage</a>
+      <a href="/login" class="nav-item" id="loginBtn">🔑 Sign In</a>
+      <a href="/login?tab=register" class="btn-launch" id="signupBtn" style="background:linear-gradient(135deg,var(--primary),var(--neon-cyan));color:#fff">✨ Sign Up Free</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-badge">⚡ NEXT-GEN HYPER WORKSPACE & STORAGE</div>
+    <h1 class="hero-title">
+      Your Files & Documents.<br>
+      <span>Ultra Fast. Ultra Secure.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Experience Docs real-time editing, high-speed cloud file sharing, native socket SMTP email dispatch, and 2FA authentication in a stunning dark neon aesthetic.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/documents" class="btn-hero-primary">
+        🚀 Open Docs Workspace
+      </a>
+      <a href="/app" class="btn-hero-secondary">
+        📁 Open File Storage
+      </a>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <h2 class="section-title">Built for Modern Productivity</h2>
+    <p class="section-subtitle">Everything you need to create, manage, and share your data effortlessly.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📄</div>
+        <h3 class="feature-title">Docs Workspace</h3>
+        <p class="feature-desc">Full rich text document editor with real-time auto-save, starring, word counting, and export to HTML, TXT, or Markdown.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📁</div>
+        <h3 class="feature-title">Cloud File Management</h3>
+        <p class="feature-desc">Drag & drop file upload, live media preview (Images, Video, Audio, PDF), instant search, and trash recovery.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📧</div>
+        <h3 class="feature-title">Direct SMTP Email Share</h3>
+        <p class="feature-desc">Native socket-level SMTP email dispatcher supporting Gmail app passwords and custom servers for instant email sharing.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3 class="feature-title">TOTP 2FA Security</h3>
+        <p class="feature-desc">Two-Factor Authentication with QR codes, authenticator app support, and encrypted session protection.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">Admin Management</h3>
+        <p class="feature-desc">Comprehensive admin panel for user management, storage monitoring, role assignments, and system metrics.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⭐</div>
+        <h3 class="feature-title">Cyber-Obsidian Aesthetics</h3>
+        <p class="feature-desc">Designed with high-contrast glassmorphism, dynamic aurora backdrops, and glowing micro-animations.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div>Created by <a href="javascript:void(0)">Abdullah</a> — Abdullah Drive & Docs Workspace</div>
+  </footer>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (token) {
+      document.getElementById('loginBtn').textContent = '⚙️ Settings';
+      document.getElementById('loginBtn').href = '/settings';
+      const signupBtn = document.getElementById('signupBtn');
+      if (signupBtn) {
+        signupBtn.textContent = '⚡ My Workspace';
+        signupBtn.href = '/documents';
+      }
+    }
+  </script>
+</body>
+</html>
