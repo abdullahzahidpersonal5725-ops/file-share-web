@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: file-share-web
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
