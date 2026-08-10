@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const net = require('net');
 const tls = require('tls');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const ROOT_DIR = __dirname;
 const USERS_FILE = path.join(ROOT_DIR, 'users.json');
 const TOKENS_FILE = path.join(ROOT_DIR, 'sessions.json');
