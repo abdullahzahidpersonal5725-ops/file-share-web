@@ -232,13 +232,13 @@
     </div>
 
     <div class="top-actions">
-      <a href="/app" class="nav-btn active">Files</a>
-      <a href="/documents" class="nav-btn">Workspace</a>
-      <a href="/settings" class="nav-btn">Settings</a>
-      <a href="/admin" class="nav-btn" id="adminLink" style="display:none">Admin</a>
+      <a href="index.html" class="nav-btn active">Files</a>
+      <a href="documents.html" class="nav-btn">Workspace</a>
+      <a href="settings.html" class="nav-btn">Settings</a>
+      <a href="admin.html" class="nav-btn" id="adminLink" style="display:none">Admin</a>
       
       <div id="authNavGroup" style="display:flex;align-items:center;gap:8px">
-        <a href="/login" class="nav-btn" style="background:rgba(108,92,231,0.15);border-color:var(--primary);color:var(--primary-light)">Sign In</a>
+        <a href="login.html" class="nav-btn" style="background:rgba(108,92,231,0.15);border-color:var(--primary);color:var(--primary-light)">Sign In</a>
         <a href="/login?tab=register" class="nav-btn" style="background:var(--primary);border-color:var(--primary);color:#fff">Sign Up</a>
       </div>
 
@@ -448,7 +448,7 @@
       if (res.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.location.href = 'login.html';
         return null;
       }
       return res;
@@ -517,7 +517,7 @@
       } catch (err) {}
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = 'login.html';
     }
 
     const uploadZone = document.getElementById('uploadZone');

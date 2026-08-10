@@ -116,7 +116,7 @@
         <span class="admin-title">Admin Panel</span>
       </div>
       <div class="top-actions">
-        <a href="/app" class="back-btn">Back to Files</a>
+        <a href="index.html" class="back-btn">Back to Files</a>
         <button class="logout-btn" onclick="openLogoutModal()">Sign Out</button>
       </div>
     </div>
@@ -212,22 +212,22 @@
       options.headers['Authorization'] = 'Bearer ' + authToken;
       const res = await fetch(url, options);
       if (res.status === 401 || res.status === 403) {
-        window.location.href = '/login';
+        window.location.href = 'login.html';
         return null;
       }
       return res;
     }
 
     async function checkAuth() {
-      if (!authToken) { window.location.href = '/login'; return; }
+      if (!authToken) { window.location.href = 'login.html'; return; }
       try {
         const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
         const data = await res.json();
         if (!data.success || data.user.role !== 'admin') {
-          window.location.href = '/app';
+          window.location.href = 'index.html';
           return;
         }
-      } catch (err) { window.location.href = '/login'; }
+      } catch (err) { window.location.href = 'login.html'; }
     }
 
     function openLogoutModal() {
@@ -244,7 +244,7 @@
       try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + authToken } }); } catch (err) {}
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = 'login.html';
     }
 
     function switchTab(tab) {

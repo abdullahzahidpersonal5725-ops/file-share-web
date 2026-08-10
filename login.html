@@ -202,7 +202,7 @@
         </div>
         <button type="submit" class="submit-btn" id="loginBtn">Sign In</button>
         <div style="text-align:center;margin-top:12px">
-          <a href="/forgot-password" style="color:var(--primary-light);font-size:0.85rem;text-decoration:none">Forgot password?</a>
+          <a href="forgot-password.html" style="color:var(--primary-light);font-size:0.85rem;text-decoration:none">Forgot password?</a>
         </div>
       </form>
 
@@ -358,7 +358,7 @@
         if (data.success) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
-          window.location.href = '/app';
+          window.location.href = 'index.html';
         } else {
           showError(data.error || 'Login failed');
         }
@@ -413,12 +413,12 @@
 
     function skip2FA() {
       document.getElementById('twofaModal').classList.remove('active');
-      window.location.href = '/app';
+      window.location.href = 'index.html';
     }
 
     function goTo2FASetup() {
       document.getElementById('twofaModal').classList.remove('active');
-      window.location.href = '/setup-2fa';
+      window.location.href = 'setup-2fa.html';
     }
 
     // Check if already logged in

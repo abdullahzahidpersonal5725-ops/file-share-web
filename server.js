@@ -827,12 +827,13 @@ const server = http.createServer((req, res) => {
 
       // Redirect to app (or settings page if new user onboarding)
       const userObj = JSON.stringify({ id: userId, username: users[userId].username, role: users[userId].role || 'user' });
-      const targetUrl = users[userId].needsOnboarding ? '/settings?onboarding=true' : '/app';
+      const targetUrl = users[userId].needsOnboarding ? '/settings.html?onboarding=true' : '/index.html';
       const html = `<!DOCTYPE html><html><head><title>Signing in...</title></head><body>
         <script>
           localStorage.setItem('token', ${JSON.stringify(sessionToken)});
           localStorage.setItem('user', JSON.stringify(${userObj}));
           window.location.href = '${targetUrl}';
+
         </script>
         <p style="font-family:sans-serif;color:#888;text-align:center;margin-top:40px">Signing you in...</p>
       </body></html>`;

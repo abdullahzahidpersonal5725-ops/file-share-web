@@ -232,13 +232,13 @@
     </div>
 
     <div class="top-actions">
-      <a href="/app" class="nav-btn active">Files</a>
-      <a href="/documents" class="nav-btn">Workspace</a>
-      <a href="/settings" class="nav-btn">Settings</a>
-      <a href="/admin" class="nav-btn" id="adminLink" style="display:none">Admin</a>
+      <a href="index.html" class="nav-btn active">Files</a>
+      <a href="documents.html" class="nav-btn">Workspace</a>
+      <a href="settings.html" class="nav-btn">Settings</a>
+      <a href="admin.html" class="nav-btn" id="adminLink" style="display:none">Admin</a>
       
       <div id="authNavGroup" style="display:flex;align-items:center;gap:8px">
-        <a href="/login" class="nav-btn" style="background:rgba(108,92,231,0.15);border-color:var(--primary);color:var(--primary-light)">Sign In</a>
+        <a href="login.html" class="nav-btn" style="background:rgba(108,92,231,0.15);border-color:var(--primary);color:var(--primary-light)">Sign In</a>
         <a href="/login?tab=register" class="nav-btn" style="background:var(--primary);border-color:var(--primary);color:#fff">Sign Up</a>
       </div>
 
@@ -448,37 +448,58 @@
       if (res.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.location.href = 'login.html';
         return null;
       }
       return res;
     }
 
     async function checkAuth() {
-      if (!authToken) { window.location.href = '/login'; return; }
+      if (!authToken) { window.location.href = 'login.html'; return; }
       try {
         const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
         const data = await res.json();
-        if (!data.success) { window.location.href = '/login'; return; }
-        const user = data.user;
-        const authNav = document.getElementById('authNavGroup');
-        if (authNav) authNav.style.display = 'none';
-        const sec = document.getElementById('userSection');
-        if (sec) sec.style.display = 'flex';
-        const name = document.getElementById('userName');
-        if (name) name.textContent = user.username;
-        const email = document.getElementById('userEmail');
-        if (email) email.textContent = user.email;
-        const avatar = document.getElementById('userAvatar');
-        if (avatar) avatar.textContent = user.username.charAt(0).toUpperCase();
-        if (user.role === 'admin') {
-          const badge = document.getElementById('adminBadge');
-          if (badge) badge.style.display = 'inline';
-          const link = document.getElementById('adminLink');
-          if (link) link.style.display = 'flex';
+        if (!data.success) {
+          const cachedUser = localStorage.getItem('user');
+          if (cachedUser) {
+            try {
+              const u = JSON.parse(cachedUser);
+              setupUserUI(u);
+              return;
+            } catch(e) {}
+          }
+          window.location.href = 'login.html';
+          return;
         }
-      } catch (err) { window.location.href = '/login'; }
+        setupUserUI(data.user);
+      } catch (err) {
+        const cachedUser = localStorage.getItem('user');
+        if (cachedUser) {
+          try { setupUserUI(JSON.parse(cachedUser)); return; } catch(e) {}
+        }
+        window.location.href = 'login.html';
+      }
     }
+
+    function setupUserUI(user) {
+      const authNav = document.getElementById('authNavGroup');
+      if (authNav) authNav.style.display = 'none';
+      const sec = document.getElementById('userSection');
+      if (sec) sec.style.display = 'flex';
+      const name = document.getElementById('userName');
+      if (name) name.textContent = user.username || 'User';
+      const email = document.getElementById('userEmail');
+      if (email) email.textContent = user.email || '';
+      const avatar = document.getElementById('userAvatar');
+      if (avatar) avatar.textContent = (user.username || 'U').charAt(0).toUpperCase();
+      if (user.role === 'admin') {
+        const badge = document.getElementById('adminBadge');
+        if (badge) badge.style.display = 'inline';
+        const link = document.getElementById('adminLink');
+        if (link) link.style.display = 'flex';
+      }
+    }
+
 
     function openLogoutModal() {
       const modal = document.getElementById('logoutModal');
@@ -496,7 +517,7 @@
       } catch (err) {}
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = 'login.html';
     }
 
     const uploadZone = document.getElementById('uploadZone');
