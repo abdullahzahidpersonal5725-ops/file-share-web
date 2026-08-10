@@ -219,15 +219,20 @@
     }
 
     async function checkAuth() {
-      if (!authToken) { window.location.href = 'login.html'; return; }
+      const cachedUser = localStorage.getItem('user');
+      if (!authToken || !cachedUser) {
+        window.location.href = 'login.html';
+        return;
+      }
       try {
-        const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
-        const data = await res.json();
-        if (!data.success || data.user.role !== 'admin') {
+        const u = JSON.parse(cachedUser);
+        if (u.role !== 'admin') {
           window.location.href = 'index.html';
           return;
         }
-      } catch (err) { window.location.href = 'login.html'; }
+      } catch(e) {
+        window.location.href = 'login.html';
+      }
     }
 
     function openLogoutModal() {
