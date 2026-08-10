@@ -243,14 +243,29 @@
     }
 
     async function loadProfile() {
-      const res = await apiFetch('/api/auth/me');
-      if (!res) return;
-      const data = await res.json();
-      if (!data.success) { window.location.href = 'login.html'; return; }
-      currentUser = data.user;
-      document.getElementById('usernameInput').value = currentUser.username;
-      document.getElementById('infoEmail').textContent = currentUser.email;
-      document.getElementById('infoRole').textContent = currentUser.role === 'admin' ? 'Admin' : 'User';
+      const cachedUser = localStorage.getItem('user');
+      if (cachedUser) {
+        try {
+          currentUser = JSON.parse(cachedUser);
+          document.getElementById('usernameInput').value = currentUser.username || '';
+          document.getElementById('infoEmail').textContent = currentUser.email || '';
+          document.getElementById('infoRole').textContent = currentUser.role === 'admin' ? 'Admin' : 'User';
+        } catch(e) {}
+      }
+      try {
+        const res = await apiFetch('/api/auth/me');
+        if (res) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            currentUser = data.user;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            document.getElementById('usernameInput').value = currentUser.username || '';
+            document.getElementById('infoEmail').textContent = currentUser.email || '';
+            document.getElementById('infoRole').textContent = currentUser.role === 'admin' ? 'Admin' : 'User';
+          }
+        }
+      } catch(e) {}
+
 
       // Check URL parameters for errors or onboarding
       const urlParams = new URLSearchParams(window.location.search);
