@@ -1,0 +1,32 @@
+{
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/landing",
+      "dest": "/landing.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/documents",
+      "dest": "/documents.html"
+    },
+    {
+      "src": "/settings",
+      "dest": "/settings.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ]
+}
