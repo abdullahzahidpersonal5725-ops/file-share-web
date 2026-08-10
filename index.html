@@ -459,27 +459,47 @@
       try {
         const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
         const data = await res.json();
-        if (!data.success) { window.location.href = 'login.html'; return; }
-        const user = data.user;
-        const authNav = document.getElementById('authNavGroup');
-        if (authNav) authNav.style.display = 'none';
-        const sec = document.getElementById('userSection');
-        if (sec) sec.style.display = 'flex';
-        const name = document.getElementById('userName');
-        if (name) name.textContent = user.username;
-        const email = document.getElementById('userEmail');
-        if (email) email.textContent = user.email;
-        const avatar = document.getElementById('userAvatar');
-        if (avatar) avatar.textContent = user.username.charAt(0).toUpperCase();
-        if (user.role === 'admin') {
-          const badge = document.getElementById('adminBadge');
-          if (badge) badge.style.display = 'inline';
-          const link = document.getElementById('adminLink');
-          if (link) link.style.display = 'flex';
+        if (!data.success) {
+          const cachedUser = localStorage.getItem('user');
+          if (cachedUser) {
+            try {
+              const u = JSON.parse(cachedUser);
+              setupUserUI(u);
+              return;
+            } catch(e) {}
+          }
+          window.location.href = 'login.html';
+          return;
         }
-      } catch (err) { window.location.href = 'login.html'; }
-
+        setupUserUI(data.user);
+      } catch (err) {
+        const cachedUser = localStorage.getItem('user');
+        if (cachedUser) {
+          try { setupUserUI(JSON.parse(cachedUser)); return; } catch(e) {}
+        }
+        window.location.href = 'login.html';
+      }
     }
+
+    function setupUserUI(user) {
+      const authNav = document.getElementById('authNavGroup');
+      if (authNav) authNav.style.display = 'none';
+      const sec = document.getElementById('userSection');
+      if (sec) sec.style.display = 'flex';
+      const name = document.getElementById('userName');
+      if (name) name.textContent = user.username || 'User';
+      const email = document.getElementById('userEmail');
+      if (email) email.textContent = user.email || '';
+      const avatar = document.getElementById('userAvatar');
+      if (avatar) avatar.textContent = (user.username || 'U').charAt(0).toUpperCase();
+      if (user.role === 'admin') {
+        const badge = document.getElementById('adminBadge');
+        if (badge) badge.style.display = 'inline';
+        const link = document.getElementById('adminLink');
+        if (link) link.style.display = 'flex';
+      }
+    }
+
 
     function openLogoutModal() {
       const modal = document.getElementById('logoutModal');
