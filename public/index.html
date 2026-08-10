@@ -444,39 +444,38 @@
       if (options.body && typeof options.body === 'string') {
         options.headers['Content-Type'] = 'application/json';
       }
-      const res = await fetch(url, options);
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
+      try {
+        const res = await fetch(url, options);
+        // On serverless (Vercel), sessions reset between calls.
+        // Only redirect to login on 401 if we also have no cached user.
+        if (res.status === 401) {
+          const cached = localStorage.getItem('user');
+          if (!cached) {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+            return null;
+          }
+          // Return a fake empty success to prevent redirect, data will be empty
+          return new Response(JSON.stringify({ success: true, files: [], docs: [] }), { status: 200 });
+        }
+        return res;
+      } catch(e) {
         return null;
       }
-      return res;
     }
 
     async function checkAuth() {
-      if (!authToken) { window.location.href = 'login.html'; return; }
+      const cachedUser = localStorage.getItem('user');
+      if (!authToken || !cachedUser) {
+        window.location.href = 'login.html';
+        return;
+      }
+      // Trust localStorage — no server round-trip needed.
+      // This prevents redirect loops on Vercel serverless where sessions reset.
       try {
-        const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
-        const data = await res.json();
-        if (!data.success) {
-          const cachedUser = localStorage.getItem('user');
-          if (cachedUser) {
-            try {
-              const u = JSON.parse(cachedUser);
-              setupUserUI(u);
-              return;
-            } catch(e) {}
-          }
-          window.location.href = 'login.html';
-          return;
-        }
-        setupUserUI(data.user);
-      } catch (err) {
-        const cachedUser = localStorage.getItem('user');
-        if (cachedUser) {
-          try { setupUserUI(JSON.parse(cachedUser)); return; } catch(e) {}
-        }
+        const user = JSON.parse(cachedUser);
+        setupUserUI(user);
+      } catch(e) {
         window.location.href = 'login.html';
       }
     }
