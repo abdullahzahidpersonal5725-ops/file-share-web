@@ -21,7 +21,22 @@ try {
   if (!fs.existsSync(SHARED_DIR)) fs.mkdirSync(SHARED_DIR, { recursive: true });
 } catch (e) {}
 
-
+// Seed default admin user if no users exist (needed for Vercel serverless /tmp)
+try {
+  const SEED_ADMIN_ID = '24c638fc-e4d1-4e6a-93d5-dc3f092e40a4';
+  const SEED_ADMIN = {
+    username: 'admin',
+    email: 'abdullahzahidpersonal5725@gmail.com',
+    salt: '2094aa48e1dbc3b9a0570cd80571be50',
+    hash: '4470d9cb1160b635d336f07cf8dd4cd837a41a3559de3ac14ebdad150bccf441947b5d6bd3eb061a723af40574e74aa665f5aad2e4df37791373ed078e04ce0b',
+    role: 'admin',
+    createdAt: '2026-08-10T11:59:36.996Z',
+    googleAuth: false
+  };
+  if (!fs.existsSync(USERS_FILE) || fs.readFileSync(USERS_FILE,'utf8').trim() === '{}' || fs.readFileSync(USERS_FILE,'utf8').trim() === '') {
+    fs.writeFileSync(USERS_FILE, JSON.stringify({ [SEED_ADMIN_ID]: SEED_ADMIN }, null, 2));
+  }
+} catch(e) {}
 
 function loadJson(file) {
   try {
