@@ -39,8 +39,15 @@ function saveJson(file, data) {
 }
 
 function getGoogleOAuthConfig() {
-  try { return loadJson(GOOGLE_OAUTH_FILE); } catch (e) { return {}; }
+  const jsonCfg = loadJson(GOOGLE_OAUTH_FILE);
+  if (jsonCfg && jsonCfg.clientId && jsonCfg.clientSecret) return jsonCfg;
+  return {
+    clientId: process.env.GOOGLE_CLIENT_ID || "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    redirectUri: process.env.GOOGLE_REDIRECT_URI || "https://file-share-web-mauve.vercel.app/api/auth/google/callback"
+  };
 }
+
 
 // Generic HTTPS POST helper for OAuth token exchange
 function httpsPost(hostname, reqPath, data, headers = {}) {
