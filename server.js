@@ -8,7 +8,7 @@ const net = require('net');
 const tls = require('tls');
 
 const PORT = process.env.PORT || 3000;
-const ROOT_DIR = __dirname;
+const ROOT_DIR = process.env.VERCEL ? '/tmp' : __dirname;
 const USERS_FILE = path.join(ROOT_DIR, 'users.json');
 const TOKENS_FILE = path.join(ROOT_DIR, 'sessions.json');
 const SMTP_CONFIG_FILE = path.join(ROOT_DIR, 'smtp-config.json');
@@ -16,8 +16,11 @@ const UPLOADS_DIR = path.join(ROOT_DIR, 'uploads');
 const SHARED_DIR = path.join(ROOT_DIR, 'shared');
 const GOOGLE_OAUTH_FILE = path.join(ROOT_DIR, 'google-oauth.json');
 
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-if (!fs.existsSync(SHARED_DIR)) fs.mkdirSync(SHARED_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  if (!fs.existsSync(SHARED_DIR)) fs.mkdirSync(SHARED_DIR, { recursive: true });
+} catch (e) {}
+
 
 
 function loadJson(file) {
@@ -2380,10 +2383,16 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`=================================================`);
-  console.log(`  🚀 Abdullah Drive & Docs Web Server Running!  `);
-  console.log(`  🌐 Local Access: http://localhost:${PORT}`);
-  console.log(`  📱 Mobile/Network Access: http://192.168.1.5:${PORT}`);
-  console.log(`=================================================`);
-});
+if (require.main === module) {
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`=================================================`);
+    console.log(`  🚀 Abdullah Drive & Docs Web Server Running!  `);
+    console.log(`  🌐 Local Access: http://localhost:${PORT}`);
+    console.log(`=================================================`);
+  });
+}
+
+module.exports = (req, res) => {
+  server.emit('request', req, res);
+};
+
