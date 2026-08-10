@@ -661,13 +661,16 @@ const server = http.createServer((req, res) => {
   }
 
   // --- Static Page Routing ---
-  if (pathname === '/') return serveStatic(res, path.join(ROOT_DIR, 'public', 'landing.html'));
-  if (pathname === '/app') return serveStatic(res, path.join(ROOT_DIR, 'public', 'index.html'));
-  if (pathname === '/login') return serveStatic(res, path.join(ROOT_DIR, 'public', 'login.html'));
-  if (pathname === '/documents') return serveStatic(res, path.join(ROOT_DIR, 'public', 'documents.html'));
-  if (pathname === '/admin') return serveStatic(res, path.join(ROOT_DIR, 'public', 'admin.html'));
-  if (pathname === '/settings') return serveStatic(res, path.join(ROOT_DIR, 'public', 'settings.html'));
-  if (pathname === '/setup-2fa') return serveStatic(res, path.join(ROOT_DIR, 'public', 'setup-2fa.html'));
+  if (pathname === '/' || pathname === '/index' || pathname === '/index.html') return serveStatic(res, path.join(ROOT_DIR, 'index.html'));
+  if (pathname === '/app') return serveStatic(res, path.join(ROOT_DIR, 'index.html'));
+  if (pathname === '/login' || pathname === '/login.html') return serveStatic(res, path.join(ROOT_DIR, 'login.html'));
+  if (pathname === '/landing' || pathname === '/landing.html') return serveStatic(res, path.join(ROOT_DIR, 'landing.html'));
+  if (pathname === '/documents' || pathname === '/documents.html') return serveStatic(res, path.join(ROOT_DIR, 'documents.html'));
+  if (pathname === '/admin' || pathname === '/admin.html') return serveStatic(res, path.join(ROOT_DIR, 'admin.html'));
+  if (pathname === '/settings' || pathname === '/settings.html') return serveStatic(res, path.join(ROOT_DIR, 'settings.html'));
+  if (pathname === '/setup-2fa' || pathname === '/setup-2fa.html') return serveStatic(res, path.join(ROOT_DIR, 'setup-2fa.html'));
+  if (pathname === '/share' || pathname === '/share.html') return serveStatic(res, path.join(ROOT_DIR, 'share.html'));
+
   if (pathname === '/forgot-password') return serveStatic(res, path.join(ROOT_DIR, 'public', 'forgot-password.html'));
   if (pathname.startsWith('/share/')) return serveStatic(res, path.join(ROOT_DIR, 'public', 'share.html'));
 
